@@ -7,8 +7,6 @@ import { useOrdersStore } from "../store/ordersStore";
 import { formatPrice } from "../data/products";
 import { createOrder } from "../services/api";
 
-const SHIPPING_COST = 25000;
-
 export default function Checkout() {
   const navigate = useNavigate();
   const items = useCartStore((s) => s.items);
@@ -35,7 +33,7 @@ export default function Checkout() {
   if (items.length === 0) return null;
 
   const subtotal = getTotal();
-  const total = subtotal + SHIPPING_COST;
+  const total = subtotal;
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -66,7 +64,8 @@ export default function Checkout() {
         selectedVariants: item.selectedVariants,
       })),
       subtotal,
-      shippingCost: SHIPPING_COST,
+      subtotal,
+      shippingCost: "Diinfokan via WhatsApp",
       total,
       createdAt: new Date().toISOString(),
     };
@@ -136,7 +135,7 @@ export default function Checkout() {
                   </h2>
                 </div>
                 <p className="text-neutral-400 text-xs font-light leading-relaxed">
-                  Detail nomor rekening dan konfirmasi pembayaran akan diinformasikan langsung oleh tim Anemone melalui WhatsApp setelah pesanan dibuat.
+                  Detail ongkos kirim, nomor rekening, dan konfirmasi pembayaran akan diinformasikan langsung oleh tim Anemone melalui WhatsApp setelah pesanan dibuat.
                 </p>
               </div>
             </div>
@@ -180,15 +179,15 @@ export default function Checkout() {
                 {/* Totals */}
                 <div className="space-y-3 pt-4 border-t border-white/5 text-sm">
                   <div className="flex justify-between text-neutral-400">
-                    <span>Subtotal</span>
+                    <span>Subtotal Produk</span>
                     <span className="text-white font-medium">{formatPrice(subtotal)}</span>
                   </div>
                   <div className="flex justify-between text-neutral-400">
-                    <span>Shipping</span>
-                    <span className="text-white font-medium">{formatPrice(SHIPPING_COST)}</span>
+                    <span>Ongkos Kirim</span>
+                    <span className="text-neutral-400 text-xs italic">Diinfokan via WhatsApp</span>
                   </div>
                   <div className="flex justify-between pt-3 border-t border-white/10 text-base font-bold text-white">
-                    <span>Total</span>
+                    <span>Total Produk</span>
                     <span className="text-white">{formatPrice(total)}</span>
                   </div>
                 </div>
