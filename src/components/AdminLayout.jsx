@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Package, Box, ArrowLeft, Bell, User, Menu, X, Activity } from 'lucide-react';
+import { LayoutDashboard, Package, Box, ArrowLeft, User, Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Logo from './Logo';
 

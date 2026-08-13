@@ -1,12 +1,12 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { Plus, Edit2, Trash2, X, Star, Check, Upload, Image as ImageIcon, Camera, Trash, Loader2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Check, Upload, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatPrice } from '../../data/products';
 import { useProductsStore } from '../../store/productsStore';
 
 export default function AdminProducts() {
   // Subscribe to shared persistent Zustand productsStore
-  const productList = useProductsStore((s) => s.products);
+  const productList = useProductsStore((s) => s.products) || [];
   const addProduct = useProductsStore((s) => s.addProduct);
   const updateProduct = useProductsStore((s) => s.updateProduct);
   const deleteProduct = useProductsStore((s) => s.deleteProduct);
@@ -22,6 +22,7 @@ export default function AdminProducts() {
   const [form, setForm] = useState({
     name: '',
     category: 'Holds',
+    material: 'PU',
     price: '',
     stock: 25,
     images: ['/images/crimps.jpg'],
@@ -40,6 +41,7 @@ export default function AdminProducts() {
     setForm({
       name: '',
       category: 'Holds',
+      material: 'PU',
       price: '',
       stock: 20,
       images: ['/images/crimps.jpg'],
@@ -57,6 +59,7 @@ export default function AdminProducts() {
     setForm({
       name: product.name,
       category: product.category || 'Holds',
+      material: product.material || 'PU',
       price: product.price,
       stock: product.stock || 15,
       images: existingImages,
@@ -169,6 +172,7 @@ export default function AdminProducts() {
         updateProduct(editingProduct.id, {
           name: form.name.trim(),
           category: form.category,
+          material: form.material || 'PU',
           price: priceNum,
           stock: stockNum,
           images: finalImages,
@@ -199,6 +203,7 @@ export default function AdminProducts() {
           name: form.name.trim(),
           slug: finalSlug,
           category: form.category,
+          material: form.material || 'PU',
           price: priceNum,
           stock: stockNum,
           description: form.description,
@@ -444,7 +449,7 @@ export default function AdminProducts() {
                   />
                 </div>
 
-                {/* Category & Price */}
+                {/* Category & Material */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="font-mono text-[10px] uppercase font-bold tracking-widest text-neutral-400 block">
@@ -466,6 +471,26 @@ export default function AdminProducts() {
 
                   <div className="space-y-2">
                     <label className="font-mono text-[10px] uppercase font-bold tracking-widest text-neutral-400 block">
+                      MATERIAL
+                    </label>
+                    <select
+                      value={form.material}
+                      onChange={(e) => setForm({ ...form, material: e.target.value })}
+                      className="w-full bg-black border border-white/10 rounded-sm px-4 py-3 text-xs font-mono text-white focus:border-white/40 outline-none transition-all uppercase tracking-wider"
+                    >
+                      <option value="PU" className="bg-black">PU (Polyurethane)</option>
+                      <option value="PE" className="bg-black">PE (Polyester)</option>
+                      <option value="Fiberglass" className="bg-black">Fiberglass</option>
+                      <option value="Plywood" className="bg-black">Plywood</option>
+                      <option value="Wood" className="bg-black">Wood</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Price & Stock */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="font-mono text-[10px] uppercase font-bold tracking-widest text-neutral-400 block">
                       PRICE (IDR)
                     </label>
                     <input
@@ -477,7 +502,6 @@ export default function AdminProducts() {
                       className="w-full bg-black border border-white/10 rounded-sm px-4 py-3 text-xs font-mono text-white focus:border-white/40 outline-none transition-all placeholder-neutral-700"
                     />
                   </div>
-                </div>
 
                 {/* Stock */}
                 <div className="space-y-2">
@@ -493,6 +517,7 @@ export default function AdminProducts() {
                     className="w-full bg-black border border-white/10 rounded-sm px-4 py-3 text-xs font-mono text-white focus:border-white/40 outline-none transition-all"
                   />
                 </div>
+              </div>
 
                 {/* MULTIPLE PHOTOS UPLOAD SECTION */}
                 <div className="space-y-3 pt-2">

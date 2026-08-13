@@ -1,9 +1,8 @@
-import { useState, useMemo, useEffect, useRef } from "react";
-import { Link, useLocation, useSearchParams } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingCart, Menu, X, ArrowRight } from "lucide-react";
 import { useCartStore } from "../store/cartStore";
-import { categories } from "../data/products";
 import Logo from "./Logo";
 
 const navLinks = [
@@ -14,7 +13,6 @@ const navLinks = [
   { name: "Contact", path: "/contact" },
 ];
 
-const filterCategories = ["All", ...categories];
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -39,32 +37,6 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Shop category filter — active on /shop and /macros routes
-  const isShopPage = location.pathname === "/shop" || location.pathname === "/macros";
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  const activeCategory = useMemo(() => {
-    if (!isShopPage) return "All";
-    const categoryParam = searchParams.get("category");
-    if (categoryParam) {
-      const found = categories.find(
-        (c) => c.toLowerCase() === categoryParam.toLowerCase()
-      );
-      if (found) return found;
-    }
-    if (location.pathname === "/macros") return "Macros";
-    return "All";
-  }, [isShopPage, searchParams, location.pathname]);
-
-  const handleCategoryChange = (category) => {
-    const newParams = new URLSearchParams(searchParams);
-    if (category === "All") {
-      newParams.delete("category");
-    } else {
-      newParams.set("category", category);
-    }
-    setSearchParams(newParams);
-  };
 
   return (
     <>

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Phone, MapPin, Clock, Send, CheckCircle2, MessageSquare, Building } from "lucide-react";
+import { Mail, Phone, MapPin, Clock, Send, CheckCircle2, MessageSquare } from "lucide-react";
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -44,21 +44,35 @@ export default function Contact() {
           {/* Action Buttons Stack (Direct Email & Phone/WhatsApp - Blokholds Style) */}
           <div className="flex flex-col items-center justify-center gap-4 pt-4 w-full">
             <a
-              href="mailto:contact@anemoneclimbing.com"
+              href="mailto:anemone@anemonegrip.com"
               className="w-full sm:w-[380px] bg-[#1a1a1a] border border-white/30 text-white font-semibold text-sm sm:text-base px-8 py-4 rounded-2xl hover:bg-neutral-800 hover:border-white/50 transition-all flex items-center justify-center gap-3 cursor-pointer shadow-lg group"
             >
               <Mail size={19} className="text-neutral-300 group-hover:text-white transition-colors" />
-              <span>contact@anemoneclimbing.com</span>
+              <span>anemone@anemonegrip.com</span>
             </a>
 
             <a
-              href="https://wa.me/6281322663825"
+              href="https://wa.me/6281218124221"
               target="_blank"
               rel="noopener noreferrer"
               className="w-full sm:w-[380px] bg-[#1a1a1a] border border-teal text-teal font-semibold text-sm sm:text-base px-8 py-4 rounded-2xl hover:bg-teal hover:text-black transition-all flex items-center justify-center gap-3 cursor-pointer shadow-lg group"
             >
               <Phone size={19} className="text-teal group-hover:text-black transition-colors" />
-              <span>+62 813 2266 3825</span>
+              <span>+62 812 1812 4221</span>
+            </a>
+
+            <a
+              href="https://www.instagram.com/anemonegrip/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-[380px] bg-[#1a1a1a] border border-white/30 text-white font-semibold text-sm sm:text-base px-8 py-4 rounded-2xl hover:bg-neutral-800 hover:border-white/50 transition-all flex items-center justify-center gap-3 cursor-pointer shadow-lg group"
+            >
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-300 group-hover:text-white transition-colors">
+                <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+              </svg>
+              <span>@anemonegrip</span>
             </a>
           </div>
 
@@ -221,7 +235,7 @@ export default function Contact() {
                       </h4>
                     </div>
                     <p className="text-neutral-400 text-xs font-light leading-relaxed pl-11">
-                      Respon cepat WhatsApp resmi <span className="text-teal font-mono font-bold">+62 813 2266 3825</span> untuk pertanyaan stok &amp; pengiriman sampel holds.
+                      Respon cepat WhatsApp resmi <span className="text-teal font-mono font-bold">+62 812 1812 4221</span> untuk pertanyaan stok &amp; pengiriman sampel holds.
                     </p>
                   </div>
                 </div>

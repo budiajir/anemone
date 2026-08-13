@@ -3,7 +3,7 @@ import { formatPrice } from '../data/products';
 /**
  * Generate identical Order Form HTML print document for Web & Admin
  */
-export function generateOrderFormPdfHtml(order) {
+export function generateOrderFormPdfHtml(order = {}) {
   const orderNo = order.id || order.orderNo || `ANM-${Math.floor(100000 + Math.random() * 900000)}`;
   
   // Format Date

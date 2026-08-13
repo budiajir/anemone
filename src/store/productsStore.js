@@ -7,7 +7,7 @@ const safeLocalStorage = {
   getItem: (name) => {
     try {
       const str = localStorage.getItem(name);
-      return str ? JSON.parse(str) : null;
+      return str || null;
     } catch (e) {
       console.error('Error reading products from localStorage:', e);
       return null;
@@ -15,7 +15,7 @@ const safeLocalStorage = {
   },
   setItem: (name, value) => {
     try {
-      localStorage.setItem(name, JSON.stringify(value));
+      localStorage.setItem(name, value);
     } catch (e) {
       console.warn('LocalStorage quota limit reached when persisting products:', e);
     }

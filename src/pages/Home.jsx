@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ChevronDown, ArrowRight, Download } from 'lucide-react';
+import { ChevronDown, ArrowRight } from 'lucide-react';
 import { products } from '../data/products';
 import { generateProductCatalogPdfHtml } from '../utils/pdfGenerator';
 
@@ -37,7 +37,7 @@ export default function Home() {
       subtitle: "App-Integrated Interactive LED Climbing Ecosystem",
       categoryName: "Smart Wall Kit",
       path: "/smart-wall",
-      bgImage: "/images/smartwall.jpg",
+      bgImage: "/images/argus.png",
       tag: "Interactive Hardware"
     },
     {
@@ -46,7 +46,7 @@ export default function Home() {
       subtitle: "Carved Beech Wood Fingerboards for Max Strength",
       categoryName: "Training Board",
       path: "/shop?category=Hangboard",
-      bgImage: "/images/hangboard.jpg",
+      bgImage: "/images/cucu_chips.png",
       tag: "Hangboard Series"
     },
     {
@@ -55,7 +55,7 @@ export default function Home() {
       subtitle: "Multi-Layer Crash Pads & Ultra-Pure Magnesium Chalk",
       categoryName: "Essentials",
       path: "/shop?category=Bouldering+Essentials",
-      bgImage: "/images/crashpad.jpg",
+      bgImage: "/images/eclipse.png",
       tag: "Gear & Accessories"
     }
   ];
@@ -75,7 +75,7 @@ export default function Home() {
       <section className="relative min-h-[92vh] flex items-center justify-center overflow-hidden bg-neutral-950 border-b border-white/10">
         <div 
           className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 scale-105 opacity-40 filter brightness-75"
-          style={{ backgroundImage: `url('/images/smartwall.jpg')` }}
+          style={{ backgroundImage: `url('/images/motela.png')` }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/50 to-black pointer-events-none" />
         

@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Filter, RefreshCw, FileText, ShoppingBag, Trash2, Send, MessageSquare, Phone } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Search, RefreshCw, FileText, MessageSquare } from 'lucide-react';
 import { formatPrice } from '../../data/products';
 import { useOrdersStore } from '../../store/ordersStore';
 import { generateOrderFormPdfHtml } from '../../utils/pdfGenerator';
@@ -10,7 +9,7 @@ export default function AdminOrders() {
   const [searchQuery, setSearchQuery] = useState('');
 
   // Subscribe to persistent Zustand ordersStore
-  const orders = useOrdersStore((s) => s.orders);
+  const orders = useOrdersStore((s) => s.orders) || [];
   const updateOrderStatus = useOrdersStore((s) => s.updateOrderStatus);
   const clearAllOrders = useOrdersStore((s) => s.clearAllOrders);
 
@@ -42,12 +41,12 @@ export default function AdminOrders() {
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {
       const matchStatus =
-        statusFilter === 'all' || order.status.toLowerCase() === statusFilter.toLowerCase();
+        statusFilter === 'all' || (order.status || '').toLowerCase() === statusFilter.toLowerCase();
       const matchSearch =
-        order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        order.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (order.phone && order.phone.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        order.items.toLowerCase().includes(searchQuery.toLowerCase());
+        (order.id || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (order.customer || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (order.phone && (order.phone || '').toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (order.items || '').toLowerCase().includes(searchQuery.toLowerCase());
       return matchStatus && matchSearch;
     });
   }, [orders, statusFilter, searchQuery]);

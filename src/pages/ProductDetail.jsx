@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Maximize2, ShoppingCart, ArrowLeft, Loader2, Minus, Plus, Check, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Maximize2, ShoppingCart, ArrowLeft, Loader2, Minus, Plus, X } from 'lucide-react';
 import { useCartStore } from '../store/cartStore';
 import { formatPrice } from '../data/products';
 import ProductCard from '../components/ProductCard';
@@ -44,10 +44,14 @@ export default function ProductDetail() {
       try {
         const data = await getProductBySlug(slug);
         if (isMounted) {
+          if (!data) {
+            setError('Product not found');
+            return;
+          }
           setProduct(data);
 
           const defaultVariants = (data.variants || []).reduce(
-            (acc, variant) => ({ ...acc, [variant.name]: variant.options[0] }),
+            (acc, variant) => ({ ...acc, [variant.name]: variant.options?.[0] || '' }),
             {}
           );
           setSelectedVariants(defaultVariants);

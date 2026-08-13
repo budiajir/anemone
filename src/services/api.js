@@ -29,7 +29,7 @@ export async function getProducts(category = '') {
     // Fallback to Zustand productsStore
     const allProds = useProductsStore.getState().products;
     if (category && category.toLowerCase() !== 'all') {
-      return allProds.filter(
+      return (allProds || []).filter(
         (p) => p.category && p.category.toLowerCase() === category.toLowerCase()
       );
     }
@@ -58,7 +58,7 @@ export async function getProductBySlug(slug) {
     return data.product || data;
   } catch (error) {
     const allProds = useProductsStore.getState().products;
-    const found = allProds.find((p) => p.slug === slug);
+    const found = (allProds || []).find((p) => p.slug === slug);
     if (!found) {
       throw new Error('Product not found');
     }

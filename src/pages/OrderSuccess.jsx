@@ -39,12 +39,12 @@ export default function OrderSuccess() {
   const handleSendWhatsApp = () => {
     const messageText = `Halo Anemone, pesanan saya telah berhasil dibuat!\n\n📝 *ORDER NO:* ${mockOrderId}\n📅 *Tanggal:* ${dateStr}\n status: *Processing*\n\nMohon info proses pengiriman pesanan saya. Terima kasih!`;
     const encodedText = encodeURIComponent(messageText);
-    const businessWhatsAppNumber = "6287883976827";
+    const businessWhatsAppNumber = "6281218124221";
     window.open(`https://wa.me/${businessWhatsAppNumber}?text=${encodedText}`, '_blank');
   };
 
   return (
-    <div className="bg-black text-white min-h-screen flex items-center justify-center pt-24 pb-16 px-6">
+    <div className="bg-black text-white min-h-screen flex items-center justify-center pt-28 pb-16 px-6">
       <div className="max-w-md w-full text-center">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
@@ -52,10 +52,9 @@ export default function OrderSuccess() {
           transition={{ duration: 0.5, ease: "easeOut" }}
           className="space-y-6"
         >
-          {/* Animated Glow Check Icon */}
+          {/* Animated Check Icon */}
           <div className="relative inline-flex items-center justify-center">
-            <div className="absolute inset-0 bg-teal/20 blur-xl rounded-full" />
-            <div className="relative w-20 h-20 bg-teal/10 border border-teal/30 rounded-full flex items-center justify-center text-teal">
+            <div className="w-20 h-20 bg-white/5 border border-white/20 rounded-full flex items-center justify-center text-white">
               <CheckCircle2 size={44} className="animate-pulse" />
             </div>
           </div>
@@ -70,15 +69,15 @@ export default function OrderSuccess() {
             </p>
           </div>
 
-          {/* Mock Order Details Box */}
-          <div className="rounded-2xl border border-white/5 bg-neutral-950 p-6 space-y-3 text-left">
+          {/* Order Details Box */}
+          <div className="rounded-lg border border-white/10 bg-neutral-950 p-6 space-y-3 text-left">
             <div className="flex justify-between items-center text-sm border-b border-white/5 pb-3">
               <span className="text-neutral-500 font-medium">Order Form No.</span>
-              <span className="font-mono text-teal font-bold">{mockOrderId}</span>
+              <span className="font-mono text-white font-bold">{mockOrderId}</span>
             </div>
             <div className="flex justify-between items-center text-sm border-b border-white/5 pb-3">
               <span className="text-neutral-500 font-medium">Status</span>
-              <span className="text-xs bg-teal/10 border border-teal/20 text-teal px-2.5 py-0.5 rounded-full font-semibold">
+              <span className="text-xs bg-white/10 border border-white/20 text-white px-2.5 py-0.5 rounded font-bold uppercase tracking-wider">
                 Processing
               </span>
             </div>
@@ -92,7 +91,7 @@ export default function OrderSuccess() {
           <div className="grid grid-cols-2 gap-3 pt-2">
             <button
               onClick={handleDownloadPdf}
-              className="h-12 bg-white text-black hover:bg-neutral-200 font-bold uppercase tracking-wider text-xs rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="h-12 bg-white text-black hover:bg-neutral-200 font-bold uppercase tracking-wider text-xs rounded transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <FileText size={16} />
               <span>Download PDF</span>
@@ -100,7 +99,7 @@ export default function OrderSuccess() {
 
             <button
               onClick={handleSendWhatsApp}
-              className="h-12 bg-emerald-600 hover:bg-emerald-500 text-white font-bold uppercase tracking-wider text-xs rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg"
+              className="h-12 border border-white/20 text-white hover:bg-white/10 font-bold uppercase tracking-wider text-xs rounded transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg"
             >
               <Send size={16} />
               <span>WhatsApp</span>
@@ -111,7 +110,7 @@ export default function OrderSuccess() {
           <div className="pt-2 space-y-3">
             <Link
               to="/shop"
-              className="inline-flex items-center justify-center gap-2 bg-teal text-black font-bold uppercase tracking-wider text-sm w-full py-4 rounded-xl hover:shadow-glow-teal transition-all duration-200"
+              className="inline-flex items-center justify-center gap-2 bg-white text-black font-black uppercase tracking-wider text-sm w-full py-4 rounded hover:bg-neutral-200 transition-all duration-200"
             >
               <ShoppingBag size={18} />
               Continue Shopping

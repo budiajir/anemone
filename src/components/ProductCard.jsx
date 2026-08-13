@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { formatPrice } from "../data/products";
 
 export default function ProductCard({ product }) {
+  if (!product) return null;
   const imageSrc = product.images?.[0] || product.image || "/images/crimps.jpg";
 
   return (

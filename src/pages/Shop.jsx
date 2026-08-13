@@ -1,10 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useSearchParams, useLocation, Link } from 'react-router-dom';
+import { useSearchParams, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SlidersHorizontal, ChevronDown, Check, Loader2 } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import { categories } from '../data/products';
 import { getProducts } from '../services/api';
+import { useProductsStore } from '../store/productsStore';
 
 export default function Shop() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -17,6 +18,7 @@ export default function Shop() {
 
   const filterCategories = ['All', ...categories];
   const location = useLocation();
+  const allProducts = useProductsStore((s) => s.products) || [];
 
   // Active category filter state synced with URL search params or route path (/macros)
   const activeCategory = useMemo(() => {
@@ -205,17 +207,33 @@ export default function Shop() {
                     <h3 className="font-black uppercase tracking-widest text-lg text-white text-center w-full">
                       {activeCategory.toUpperCase()} COLLECTION — COMING SOON
                     </h3>
-                    <p className="text-xs text-neutral-400 font-light max-w-md text-center leading-relaxed mx-auto">
-                      Koleksi {activeCategory} batch 2026 sedang dalam tahap akhir presisi shaping &amp; pengujian. Lihat koleksi <span className="text-white font-semibold">Holds</span> yang sudah resmi rilis.
-                    </p>
-                  </div>
-                  <div className="pt-2 flex justify-center w-full">
-                    <button
-                      onClick={() => handleCategoryChange('Holds')}
-                      className="bg-white text-black font-black text-xs uppercase tracking-widest px-6 py-3 rounded hover:bg-neutral-200 transition-colors cursor-pointer"
-                    >
-                      LIHAT PRODUK HOLDS
-                    </button>
+                    {(() => {
+                      const availableCategories = [...new Set(allProducts.map(p => p.category))].filter(Boolean);
+                      if (availableCategories.length > 0) {
+                        const categoryNames = availableCategories.join(' & ');
+                        const firstAvailable = availableCategories[0];
+                        return (
+                          <>
+                            <p className="text-xs text-neutral-400 font-light max-w-md text-center leading-relaxed mx-auto">
+                              Koleksi {activeCategory} batch 2026 sedang dalam tahap akhir presisi shaping &amp; pengujian. Lihat koleksi <span className="text-white font-semibold">{categoryNames}</span> yang sudah resmi rilis.
+                            </p>
+                            <div className="pt-2 flex justify-center w-full">
+                              <button
+                                onClick={() => handleCategoryChange(firstAvailable)}
+                                className="bg-white text-black font-black text-xs uppercase tracking-widest px-6 py-3 rounded hover:bg-neutral-200 transition-colors cursor-pointer"
+                              >
+                                LIHAT PRODUK {categoryNames.toUpperCase()}
+                              </button>
+                            </div>
+                          </>
+                        );
+                      }
+                      return (
+                        <p className="text-xs text-neutral-400 font-light max-w-md text-center leading-relaxed mx-auto">
+                          Koleksi {activeCategory} batch 2026 sedang dalam tahap akhir presisi shaping &amp; pengujian.
+                        </p>
+                      );
+                    })()}
                   </div>
                 </motion.div>
               )}

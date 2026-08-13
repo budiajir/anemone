@@ -50,7 +50,7 @@ export default function Cart() {
     
     // Format product items list for WhatsApp text
     const itemsList = items.map((item, idx) => {
-      const variantsText = Object.entries(item.selectedVariants)
+      const variantsText = Object.entries(item.selectedVariants || {})
         .map(([k, v]) => `${k}: ${v}`)
         .join(', ');
       const itemName = item.product.name + (variantsText ? ` (${variantsText})` : '');
@@ -79,7 +79,7 @@ Saya juga telah menyiapkan dokumen PDF Order Form untuk pesanan ini. Mohon info 
 
     const encodedText = encodeURIComponent(messageText);
     // Anemone Business WhatsApp Number (using international format)
-    const businessWhatsAppNumber = "6287883976827"; 
+    const businessWhatsAppNumber = "6281218124221"; 
     const whatsappUrl = `https://wa.me/${businessWhatsAppNumber}?text=${encodedText}`;
     
     // Save to shared store for Admin Panel
@@ -189,7 +189,7 @@ Saya juga telah menyiapkan dokumen PDF Order Form untuk pesanan ini. Mohon info 
                   {/* Product Image */}
                   <div className="w-20 h-20 rounded overflow-hidden bg-neutral-900 border border-white/[0.06] shrink-0 filter grayscale group-hover:grayscale-0 transition-all duration-500">
                     <img 
-                      src={item.product.images[0]} 
+                      src={item.product?.images?.[0] || item.product?.image || '/images/crimps.jpg'} 
                       alt={item.product.name} 
                       className="w-full h-full object-cover"
                     />
@@ -210,11 +210,11 @@ Saya juga telah menyiapkan dokumen PDF Order Form untuk pesanan ini. Mohon info 
                       <span className="text-neutral-500 uppercase tracking-widest font-semibold text-[10px]">
                         {item.product.category}
                       </span>
-                      {Object.keys(item.selectedVariants).length > 0 && (
+                      {Object.keys(item.selectedVariants || {}).length > 0 && (
                         <>
                           <span className="text-white/10">•</span>
                           <span className="text-neutral-400 font-light">
-                            {Object.entries(item.selectedVariants)
+                            {Object.entries(item.selectedVariants || {})
                               .map(([k, v]) => `${k}: ${v}`)
                               .join(' | ')}
                           </span>

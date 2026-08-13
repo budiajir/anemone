@@ -1,5 +1,5 @@
 import React from 'react';
-import { DollarSign, ShoppingCart, Box, Users, TrendingUp } from 'lucide-react';
+import { DollarSign, ShoppingCart, Box, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { formatPrice } from '../../data/products';
@@ -7,8 +7,8 @@ import { useOrdersStore } from '../../store/ordersStore';
 import { useProductsStore } from '../../store/productsStore';
 
 export default function AdminOverview() {
-  const orders = useOrdersStore((s) => s.orders);
-  const productList = useProductsStore((s) => s.products);
+  const orders = useOrdersStore((s) => s.orders) || [];
+  const productList = useProductsStore((s) => s.products) || [];
 
   const activeOrdersCount = orders.filter((o) => o.status !== 'Completed').length;
   const totalRevenueNumber = orders.reduce((sum, o) => sum + (o.total || 0), 0);

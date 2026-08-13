@@ -8,6 +8,7 @@ export const useOrdersStore = create(
 
       // Add a new order from Checkout / Order Form
       addOrder: (newOrder) => {
+        if (!newOrder) return;
         set((state) => {
           const itemsText = Array.isArray(newOrder.items)
             ? newOrder.items
@@ -42,7 +43,7 @@ export const useOrdersStore = create(
           };
 
           return {
-            orders: [formattedOrder, ...state.orders],
+            orders: [formattedOrder, ...(state.orders || [])],
           };
         });
       },

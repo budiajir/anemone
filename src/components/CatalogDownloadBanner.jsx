@@ -1,18 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Download } from 'lucide-react';
-import { products } from '../data/products';
-import { generateProductCatalogPdfHtml } from '../utils/pdfGenerator';
+import { FileText } from 'lucide-react';
 
 export default function CatalogDownloadBanner() {
-  const handleDownloadCatalogPdf = () => {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-    const htmlContent = generateProductCatalogPdfHtml(products);
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
-  };
-
   return (
     <section className="py-24 md:py-36 min-h-[45vh] flex items-center justify-center bg-black border-t border-white/10">
       <div className="max-w-xl mx-auto w-full px-6 text-center">
@@ -21,31 +11,30 @@ export default function CatalogDownloadBanner() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="flex flex-col items-center justify-center gap-6"
+          className="flex flex-col items-center justify-center gap-5"
         >
-          {/* Button 1: Catalog 2025-2026 */}
-          <button
-            onClick={handleDownloadCatalogPdf}
-            style={{ marginBottom: '28px' }}
-            className="w-full sm:w-[380px] bg-[#1a1a1a] border border-white/30 text-white font-semibold text-base sm:text-lg px-8 py-4.5 rounded-2xl hover:bg-neutral-800 hover:border-white/50 transition-all flex items-center justify-center gap-3 cursor-pointer shadow-lg group"
-          >
-            <Download size={20} className="text-neutral-300 group-hover:text-white transition-colors" />
-            <span>Catalog 2025-2026</span>
-          </button>
+          <div className="w-14 h-14 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-neutral-400 mx-auto">
+            <FileText size={24} />
+          </div>
 
-          {/* Button 2: Orderform* */}
-          <button
-            onClick={handleDownloadCatalogPdf}
-            className="w-full sm:w-[380px] bg-[#1a1a1a] border border-teal text-teal font-semibold text-base sm:text-lg px-8 py-4.5 rounded-2xl hover:bg-teal hover:text-black transition-all flex items-center justify-center gap-3 cursor-pointer shadow-lg group"
-          >
-            <Download size={20} className="text-teal group-hover:text-black transition-colors" />
-            <span>Orderform*</span>
-          </button>
+          <div className="space-y-2 text-center">
+            <span className="font-mono text-xs font-bold uppercase tracking-widest text-neutral-400 block">
+              CATALOG & ORDERFORM
+            </span>
+            <h3 className="text-2xl sm:text-3xl font-black uppercase text-white tracking-tight">
+              COMING SOON
+            </h3>
+            <p className="text-neutral-400 text-xs sm:text-sm font-light leading-relaxed pt-1 max-w-sm mx-auto">
+              Catalog resmi & orderform sedang dalam proses finalisasi. Silakan hubungi tim kami untuk informasi produk dan pemesanan.
+            </p>
+          </div>
 
-          {/* Footnote note */}
-          <p className="text-neutral-400 font-sans text-xs sm:text-sm tracking-wide pt-4">
-            *Prices outside Indonesia may vary!
-          </p>
+          <a
+            href="/contact"
+            className="mt-2 bg-white text-black font-black uppercase text-xs tracking-widest px-8 py-3.5 rounded hover:bg-neutral-200 transition-colors"
+          >
+            HUBUNGI KAMI
+          </a>
         </motion.div>
       </div>
     </section>

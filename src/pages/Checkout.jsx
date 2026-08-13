@@ -186,21 +186,21 @@ export default function Checkout() {
                     >
                       <div className="w-14 h-14 rounded overflow-hidden bg-neutral-900 shrink-0 group filter grayscale hover:grayscale-0 transition-all duration-500">
                         <img
-                          src={item.product.images?.[0] || item.product.image || '/images/crimps.jpg'}
-                          alt={item.product.name}
+                          src={item.product?.images?.[0] || item.product?.image || '/images/crimps.jpg'}
+                          alt={item.product?.name || 'Product'}
                           className="w-full h-full object-cover"
                         />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-white truncate">
-                          {item.product.name}
+                          {item.product?.name || 'Product'}
                         </p>
                         <p className="text-xs text-neutral-500">
                           Qty: {item.quantity}
                         </p>
                       </div>
                       <p className="text-sm font-semibold text-white whitespace-nowrap">
-                        {formatPrice(item.product.price * item.quantity)}
+                        {formatPrice((item.product?.price || 0) * item.quantity)}
                       </p>
                     </div>
                   ))}

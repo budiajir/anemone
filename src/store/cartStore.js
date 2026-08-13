@@ -4,6 +4,7 @@ export const useCartStore = create((set, get) => ({
   items: [],
 
   addItem: (product, selectedVariants = {}, quantity = 1) => {
+    if (!product?.id) return;
     set((state) => {
       const variantKey = JSON.stringify(selectedVariants);
       const existingIndex = state.items.findIndex(
@@ -52,7 +53,7 @@ export const useCartStore = create((set, get) => ({
 
   getTotal: () => {
     return get().items.reduce(
-      (total, item) => total + item.product.price * item.quantity,
+      (total, item) => total + (item.product?.price || 0) * item.quantity,
       0
     );
   },
