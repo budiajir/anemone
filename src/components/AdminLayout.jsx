@@ -1,12 +1,29 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Package, Box, ArrowLeft, User, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Package, Box, ArrowLeft, User, Menu, X, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Logo from './Logo';
+import AdminLogin from '../pages/admin/AdminLogin';
 
 export default function AdminLayout() {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return (
+      localStorage.getItem('anemone_admin_auth') === 'true' ||
+      sessionStorage.getItem('anemone_admin_auth') === 'true'
+    );
+  });
+
+  const handleLogout = () => {
+    localStorage.removeItem('anemone_admin_auth');
+    sessionStorage.removeItem('anemone_admin_auth');
+    setIsAuthenticated(false);
+  };
+
+  if (!isAuthenticated) {
+    return <AdminLogin onLoginSuccess={() => setIsAuthenticated(true)} />;
+  }
 
   const navItems = [
     { name: 'Overview', path: '/admin', icon: LayoutDashboard },
@@ -83,7 +100,7 @@ export default function AdminLayout() {
 
             <div className="h-5 w-px bg-white/10 hidden sm:block" />
 
-            {/* User Info */}
+            {/* User Info & Logout */}
             <div className="flex items-center gap-3">
               <div className="hidden sm:block text-right">
                 <div className="text-white text-xs font-bold uppercase tracking-wider leading-none">Superadmin</div>
@@ -92,6 +109,14 @@ export default function AdminLayout() {
               <div className="w-8 h-8 rounded-sm bg-neutral-900 flex items-center justify-center border border-white/15 text-neutral-300">
                 <User size={16} />
               </div>
+              <button
+                onClick={handleLogout}
+                title="Logout"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs font-mono text-neutral-400 hover:text-rose-400 hover:bg-rose-950/30 border border-white/10 hover:border-rose-500/30 transition-all cursor-pointer"
+              >
+                <LogOut size={13} />
+                <span className="hidden sm:inline">LOGOUT</span>
+              </button>
             </div>
 
             {/* Mobile Hamburger Toggle */}
@@ -146,7 +171,7 @@ export default function AdminLayout() {
                 })}
               </nav>
 
-              <div className="pt-2 border-t border-white/10">
+              <div className="pt-2 border-t border-white/10 space-y-2">
                 <Link
                   to="/"
                   onClick={() => setMobileMenuOpen(false)}
@@ -155,6 +180,16 @@ export default function AdminLayout() {
                   <ArrowLeft size={16} />
                   <span>Back to Main Website</span>
                 </Link>
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    handleLogout();
+                  }}
+                  className="w-full flex items-center gap-2 px-4 py-3 rounded-sm text-xs font-mono uppercase tracking-wider text-rose-400 hover:bg-rose-950/30 border border-rose-500/30 transition-colors cursor-pointer"
+                >
+                  <LogOut size={16} />
+                  <span>Logout Sesi Admin</span>
+                </button>
               </div>
             </motion.div>
           )}
