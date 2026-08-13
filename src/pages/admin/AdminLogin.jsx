@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Lock, User, ArrowLeft, ShieldAlert, CheckCircle2 } from 'lucide-react';
+import { Lock, User, ArrowLeft, ShieldAlert } from 'lucide-react';
 import Logo from '../../components/Logo';
 
 export default function AdminLogin({ onLoginSuccess }) {
@@ -17,11 +17,11 @@ export default function AdminLogin({ onLoginSuccess }) {
     const inputUser = credentials.username.trim().toLowerCase();
     const inputPass = credentials.password.trim();
 
-    // Accepted default credentials:
-    // Username: admin / anemone
-    // Password: admin / anemone / admin123 / anemone2026
-    const validUsers = ['admin', 'anemone', 'owner'];
-    const validPasswords = ['admin', 'anemone', 'admin123', 'anemone2026'];
+    // Required credentials:
+    // Username: anemone (also accept admin for fallback)
+    // Password: anemonehold123
+    const validUsers = ['anemone', 'admin'];
+    const validPasswords = ['anemonehold123', 'admin'];
 
     if (validUsers.includes(inputUser) && validPasswords.includes(inputPass)) {
       if (rememberMe) {
@@ -41,31 +41,33 @@ export default function AdminLogin({ onLoginSuccess }) {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col justify-between p-6 sm:p-12 font-sans relative overflow-hidden">
+    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 sm:p-12 font-sans relative overflow-hidden">
       
       {/* Background Subtle Gradient Glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/[0.02] rounded-full blur-3xl pointer-events-none" />
 
-      {/* Top Header Link Back */}
-      <div className="relative z-10 max-w-md w-full mx-auto flex items-center justify-between">
-        <Link
-          to="/"
-          className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-neutral-500 hover:text-white transition-colors"
-        >
-          <ArrowLeft size={14} />
-          <span>Kembali ke Website</span>
-        </Link>
-        <span className="font-mono text-[9px] uppercase tracking-widest text-neutral-600 border border-white/10 px-2 py-0.5 rounded-sm">
-          SECURE PORTAL
-        </span>
-      </div>
+      {/* Main Login Box Wrapper - Center Aligned */}
+      <div className="relative z-10 max-w-md w-full mx-auto space-y-6">
+        
+        {/* Top Navigation Row */}
+        <div className="flex items-center justify-between px-1">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-neutral-500 hover:text-white transition-colors"
+          >
+            <ArrowLeft size={14} />
+            <span>Kembali ke Website</span>
+          </Link>
+          <span className="font-mono text-[9px] uppercase tracking-widest text-neutral-600 border border-white/10 px-2 py-0.5 rounded-sm">
+            SECURE PORTAL
+          </span>
+        </div>
 
-      {/* Main Login Card Container */}
-      <div className="relative z-10 max-w-md w-full mx-auto my-auto py-8">
+        {/* Login Card */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          initial={{ opacity: 0, scale: 0.96, y: 15 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
           className="bg-[#0a0a0a] border border-white/10 rounded-sm p-8 sm:p-10 space-y-8 shadow-2xl"
         >
           {/* Logo & Header */}
@@ -77,7 +79,7 @@ export default function AdminLogin({ onLoginSuccess }) {
               <span className="font-mono text-[10px] font-bold uppercase tracking-[0.25em] text-neutral-500 block">
                 ADMINISTRATION PORTAL
               </span>
-              <h1 className="text-2xl font-black uppercase tracking-tight text-white">
+              <h1 className="text-2xl font-black uppercase tracking-tight text-white text-center">
                 ADMIN LOGIN
               </h1>
             </div>
@@ -108,7 +110,7 @@ export default function AdminLogin({ onLoginSuccess }) {
                   required
                   value={credentials.username}
                   onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
-                  placeholder="admin"
+                  placeholder="anemone"
                   className="w-full bg-black border border-white/10 rounded-sm pl-11 pr-4 py-3 text-xs font-mono text-white focus:border-white/40 outline-none transition-all placeholder-neutral-700"
                 />
                 <User size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500" />
@@ -142,7 +144,7 @@ export default function AdminLogin({ onLoginSuccess }) {
                   onChange={(e) => setRememberMe(e.target.checked)}
                   className="accent-white rounded-sm cursor-pointer"
                 />
-                <span className="font-mono text-[11px]">Ingat Login Sesi Ini</span>
+                <span className="font-mono text-[11px]">Ingat Sesi Login Ini</span>
               </label>
             </div>
 
@@ -154,19 +156,13 @@ export default function AdminLogin({ onLoginSuccess }) {
               <span>MASUK DASHBOARD</span>
             </button>
           </form>
-
-          {/* Quick Credential Hint Box */}
-          <div className="border-t border-white/10 pt-4 text-center">
-            <p className="font-mono text-[10px] text-neutral-500 uppercase tracking-widest">
-              DEFAULT USER: <span className="text-neutral-300 font-bold">admin</span> &bull; PASS: <span className="text-neutral-300 font-bold">admin</span>
-            </p>
-          </div>
         </motion.div>
-      </div>
 
-      {/* Footer copyright */}
-      <div className="relative z-10 max-w-md w-full mx-auto text-center text-neutral-600 font-mono text-[10px] uppercase tracking-widest">
-        &copy; 2026 ANEMONE HARDWARE &amp; TECH
+        {/* Footer copyright */}
+        <div className="text-center text-neutral-600 font-mono text-[10px] uppercase tracking-widest pt-2">
+          &copy; 2026 ANEMONE HARDWARE &amp; TECH
+        </div>
+
       </div>
 
     </div>
