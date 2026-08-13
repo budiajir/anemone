@@ -14,6 +14,19 @@ export default function Contact() {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.name || !formData.email || !formData.message) return;
+
+    const messageText = `Halo Anemone, ada pesan baru dari Formulir Kontak Website:
+
+👤 *NAMA:* ${formData.name}
+✉️ *EMAIL:* ${formData.email}
+🏷️ *KATEGORI:* ${formData.subject}
+
+💬 *PESAN:*
+${formData.message}`;
+
+    const encodedText = encodeURIComponent(messageText);
+    window.open(`https://wa.me/6281218124221?text=${encodedText}`, '_blank');
+
     setSubmitted(true);
     setTimeout(() => {
       setSubmitted(false);
