@@ -1,101 +1,102 @@
 import { useProductsStore } from '../store/productsStore';
-
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+import { supabase, isSupabaseConfigured } from './supabase';
 
 /**
  * Fetch all products or filter by category query parameter.
- * Includes graceful fallback to persistent productsStore if offline.
+ * Uses Supabase if configured, otherwise falls back to persistent productsStore.
  */
 export async function getProducts(category = '') {
-  try {
-    const url = category && category.toLowerCase() !== 'all'
-      ? `${BASE_URL}/products?category=${encodeURIComponent(category)}`
-      : `${BASE_URL}/products`;
-
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`API error: ${response.statusText}`);
+  if (isSupabaseConfigured && supabase) {
+    try {
+      let query = supabase.from('products').select('*');
+      if (category && category.toLowerCase() !== 'all') {
+        query = query.ilike('category', category);
+      }
+      const { data, error } = await query;
+      if (!error && data && data.length > 0) {
+        return data;
+      }
+    } catch (err) {
+      console.warn('Supabase fetch error, fallback to local store:', err);
     }
-
-    const data = await response.json();
-    return data.products || data;
-  } catch (error) {
-    // Fallback to Zustand productsStore
-    const allProds = useProductsStore.getState().products;
-    if (category && category.toLowerCase() !== 'all') {
-      return (allProds || []).filter(
-        (p) => p.category && p.category.toLowerCase() === category.toLowerCase()
-      );
-    }
-    return allProds;
   }
+
+  // Fallback to Zustand productsStore
+  const allProds = useProductsStore.getState().products;
+  if (category && category.toLowerCase() !== 'all') {
+    return (allProds || []).filter(
+      (p) => p.category && p.category.toLowerCase() === category.toLowerCase()
+    );
+  }
+  return allProds;
 }
 
 /**
  * Fetch a single product by slug.
- * Includes fallback to persistent productsStore if offline.
+ * Uses Supabase if configured, otherwise falls back to persistent productsStore.
  */
 export async function getProductBySlug(slug) {
-  try {
-    const response = await fetch(`${BASE_URL}/products/${slug}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('slug', slug)
+        .single();
 
-    if (!response.ok) {
-      throw new Error(`API error: ${response.statusText}`);
+      if (!error && data) {
+        return data;
+      }
+    } catch (err) {
+      console.warn('Supabase product fetch error, fallback to local store:', err);
     }
-
-    const data = await response.json();
-    return data.product || data;
-  } catch (error) {
-    const allProds = useProductsStore.getState().products;
-    const found = (allProds || []).find((p) => p.slug === slug);
-    if (!found) {
-      throw new Error('Product not found');
-    }
-    return found;
   }
+
+  const allProds = useProductsStore.getState().products;
+  const found = (allProds || []).find((p) => p.slug === slug);
+  if (!found) {
+    throw new Error('Product not found');
+  }
+  return found;
 }
 
 /**
- * Create a new order by posting to POST /api/orders.
- * Includes fallback response if offline.
+ * Create a new order.
+ * Saves to Supabase orders table if configured.
  */
 export async function createOrder(orderData) {
-  try {
-    const response = await fetch(`${BASE_URL}/orders`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(orderData),
-    });
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .insert([{
+          order_no: orderData.orderNo || `ANM-${Date.now()}`,
+          customer: orderData.customer,
+          items: orderData.items,
+          subtotal: orderData.subtotal,
+          shipping_cost: orderData.shippingCost,
+          total: orderData.total,
+          status: 'Processing',
+          created_at: new Date().toISOString()
+        }])
+        .select();
 
-    if (!response.ok) {
-      throw new Error(`API error: ${response.statusText}`);
+      if (!error && data) {
+        return { success: true, order: data[0] };
+      }
+    } catch (err) {
+      console.warn('Supabase order creation error:', err);
     }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    return {
-      success: true,
-      message: 'Order created offline fallback',
-      order: {
-        id: orderData.orderNo || `ANM-${Date.now()}`,
-        ...orderData,
-        status: 'Processing',
-        createdAt: new Date().toISOString(),
-      },
-    };
   }
+
+  return {
+    success: true,
+    message: 'Order created locally',
+    order: {
+      id: orderData.orderNo || `ANM-${Date.now()}`,
+      ...orderData,
+      status: 'Processing',
+      createdAt: new Date().toISOString(),
+    },
+  };
 }
