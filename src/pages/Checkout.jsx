@@ -1,19 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ChevronLeft, Truck, CreditCard, QrCode, Banknote, Loader2 } from "lucide-react";
+import { ChevronLeft, Truck, CreditCard, Loader2 } from "lucide-react";
 import { useCartStore } from "../store/cartStore";
 import { useOrdersStore } from "../store/ordersStore";
 import { formatPrice } from "../data/products";
 import { createOrder } from "../services/api";
 
 const SHIPPING_COST = 25000;
-
-const paymentMethods = [
-  { id: "bank", label: "Bank Transfer", icon: CreditCard, desc: "BCA / Mandiri / BNI" },
-  { id: "qris", label: "QRIS", icon: QrCode, desc: "Scan & Pay instantly" },
-  { id: "cod", label: "Cash on Delivery", icon: Banknote, desc: "Pay when received" },
-];
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -29,7 +23,6 @@ export default function Checkout() {
     city: "",
     postalCode: "",
   });
-  const [payment, setPayment] = useState("bank");
   const [submitting, setSubmitting] = useState(false);
 
   // Redirect to shop if cart is empty
@@ -64,7 +57,7 @@ export default function Checkout() {
         city: form.city,
         postalCode: form.postalCode,
       },
-      paymentMethod: payment,
+      paymentMethod: "WhatsApp Confirmation",
       items: items.map((item) => ({
         productId: item.product.id,
         name: item.product.name,
@@ -134,39 +127,17 @@ export default function Checkout() {
                 </div>
               </div>
 
-              {/* Payment Method */}
-              <div className="bg-neutral-950 border border-white/[0.06] rounded-lg p-6 md:p-8 space-y-5">
-                <div className="flex items-center gap-3 mb-2">
-                  <CreditCard size={20} className="text-teal" />
-                  <h2 className="text-lg font-bold uppercase tracking-wider">
-                    Payment Method
+              {/* Payment Info */}
+              <div className="bg-neutral-950 border border-white/[0.06] rounded-lg p-6 md:p-8 space-y-3">
+                <div className="flex items-center gap-3">
+                  <CreditCard size={20} className="text-white" />
+                  <h2 className="text-lg font-bold uppercase tracking-wider text-white">
+                    Instruksi Pembayaran
                   </h2>
                 </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  {paymentMethods.map((m) => {
-                    const Icon = m.icon;
-                    const active = payment === m.id;
-                    return (
-                      <button
-                        key={m.id}
-                        type="button"
-                        onClick={() => setPayment(m.id)}
-                        className={`p-4 rounded border text-left transition-all duration-200 cursor-pointer ${
-                          active
-                            ? "border-white/40 bg-white/5"
-                            : "border-white/10 hover:border-white/20"
-                        }`}
-                      >
-                        <Icon size={22} className={active ? "text-white" : "text-neutral-500"} />
-                        <p className={`mt-3 text-sm font-semibold ${active ? "text-white" : "text-neutral-300"}`}>
-                          {m.label}
-                        </p>
-                        <p className="text-[11px] text-neutral-500 mt-0.5">{m.desc}</p>
-                      </button>
-                    );
-                  })}
-                </div>
+                <p className="text-neutral-400 text-xs font-light leading-relaxed">
+                  Detail nomor rekening dan konfirmasi pembayaran akan diinformasikan langsung oleh tim Anemone melalui WhatsApp setelah pesanan dibuat.
+                </p>
               </div>
             </div>
 

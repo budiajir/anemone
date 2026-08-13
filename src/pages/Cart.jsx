@@ -40,10 +40,6 @@ export default function Cart() {
     setOrderNo(`ANM-${yyyy}${mm}${dd}-${random}`);
   }, [showCheckoutModal]); // Regenerate unique number if modal opens
 
-  const handleCheckout = () => {
-    alert("Checkout simulator: Pembayaran dan integrasi sistem ekosistem Anemone akan terhubung di tahap selanjutnya!");
-  };
-
   // Generate WhatsApp Message & Redirect
   const handleSendWhatsApp = () => {
     const formattedTotal = formatPrice(getTotal());
@@ -421,14 +417,6 @@ Saya juga telah menyiapkan dokumen PDF Order Form untuk pesanan ini. Mohon info 
                   <span>Download PDF</span>
                 </button>
               </div>
-
-              {/* Optional simulated full checkout */}
-              <button
-                onClick={handleCheckout}
-                className="w-full h-11 border border-white/10 hover:border-white/20 text-neutral-400 hover:text-white font-bold uppercase tracking-wider text-xs rounded transition-colors flex items-center justify-center gap-2"
-              >
-                Proceed via Sandbox Gateway
-              </button>
             </motion.div>
           </div>
         )}
