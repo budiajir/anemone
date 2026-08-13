@@ -183,7 +183,7 @@ Saya juga telah menyiapkan dokumen PDF Order Form untuk pesanan ini. Mohon info 
                   className="bg-neutral-950 border border-white/[0.06] rounded-lg p-4 flex flex-col sm:flex-row items-center gap-4 hover:border-white/20 transition-colors group"
                 >
                   {/* Product Image */}
-                  <div className="w-20 h-20 rounded overflow-hidden bg-neutral-900 border border-white/[0.06] shrink-0 filter grayscale group-hover:grayscale-0 transition-all duration-500">
+                  <div className="w-20 h-20 rounded overflow-hidden bg-neutral-900 border border-white/[0.06] shrink-0 transition-all duration-500">
                     <img 
                       src={item.product?.images?.[0] || item.product?.image || '/images/crimps.jpg'} 
                       alt={item.product.name} 

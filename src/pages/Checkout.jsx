@@ -154,7 +154,7 @@ export default function Checkout() {
                       key={item.id}
                       className="flex items-center gap-4 py-3 border-b border-white/5 last:border-0"
                     >
-                      <div className="w-14 h-14 rounded overflow-hidden bg-neutral-900 shrink-0 group filter grayscale hover:grayscale-0 transition-all duration-500">
+                      <div className="w-14 h-14 rounded overflow-hidden bg-neutral-900 shrink-0 group transition-all duration-500">
                         <img
                           src={item.product?.images?.[0] || item.product?.image || '/images/crimps.jpg'}
                           alt={item.product?.name || 'Product'}

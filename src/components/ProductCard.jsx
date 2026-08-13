@@ -20,7 +20,7 @@ export default function ProductCard({ product }) {
           <img
             src={imageSrc}
             alt={product.name}
-            className="w-full h-full object-contain filter grayscale group-hover:grayscale-0 transition-all duration-500 group-hover:scale-105"
+            className="w-full h-full object-contain transition-all duration-500 group-hover:scale-105"
             loading="lazy"
           />
           {product.material && (

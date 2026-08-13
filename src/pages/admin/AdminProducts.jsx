@@ -326,7 +326,7 @@ export default function AdminProducts() {
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-sm overflow-hidden bg-black border border-white/10 shrink-0">
-                              <img src={imgSrc} alt={product.name} className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-300" />
+                              <img src={imgSrc} alt={product.name} className="w-full h-full object-cover transition-all duration-300" />
                             </div>
                             <div>
                               <div className="text-white font-bold text-xs uppercase tracking-wider">
