@@ -1,0 +1,141 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+/* ============================================
+   ANEMONE WEB PLATFORM — Design System
+   ============================================ */
+
+/* Custom Theme Tokens */
+@theme {
+  --color-teal: #00e5c8;
+  --color-teal-dark: #00b89e;
+  --color-teal-light: #33edd6;
+  --color-coral: #ff5a6e;
+  --color-coral-dark: #e6445a;
+  --color-surface: #0a0a0a;
+  --color-surface-elevated: #141414;
+  --color-surface-overlay: #1f1f1f;
+  --color-border-subtle: rgba(255, 255, 255, 0.08);
+  --color-border-medium: rgba(255, 255, 255, 0.12);
+  --font-family-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --shadow-glow-teal: 0 0 20px rgba(0, 229, 200, 0.15);
+  --shadow-glow-coral: 0 0 20px rgba(255, 90, 110, 0.3);
+  --shadow-glow-teal-lg: 0 0 40px rgba(0, 229, 200, 0.2);
+}
+
+/* Base Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  background-color: #000000;
+  color: #ffffff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+::-webkit-scrollbar-thumb {
+  background: #333333;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #555555;
+}
+
+/* Glass Utility */
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-hover:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Glow Effects */
+.glow-teal {
+  box-shadow: 0 0 20px rgba(0, 229, 200, 0.15);
+}
+
+.glow-teal-soft {
+  box-shadow: 0 0 40px rgba(0, 229, 200, 0.15);
+}
+
+.text-glow-teal {
+  text-shadow: 0 0 20px rgba(0, 229, 200, 0.2);
+}
+
+/* Gradient Utilities */
+.gradient-teal {
+  background: linear-gradient(135deg, #00e5c8, #00b89e);
+}
+
+.gradient-dark {
+  background: linear-gradient(180deg, #000000 0%, #0a0a0a 100%);
+}
+
+.gradient-radial-teal {
+  background: radial-gradient(ellipse at center, rgba(0, 229, 200, 0.08) 0%, transparent 70%);
+}
+
+/* Selection */
+::selection {
+  background-color: rgba(0, 229, 200, 0.3);
+  color: #ffffff;
+}
+
+/* Focus Ring */
+*:focus-visible {
+  outline: 2px solid #00e5c8;
+  outline-offset: 2px;
+}
+
+/* Smooth image loading */
+img {
+  transition: opacity 0.3s ease;
+}
+
+/* Number input hide arrows */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* Monochrome Utilities */
+.grayscale-hover {
+  @apply filter grayscale transition-all duration-500;
+}
+.group:hover .grayscale-hover {
+  @apply grayscale-0;
+}
+
+.mono-card {
+  @apply bg-neutral-950 border border-white/[0.06] rounded-lg transition-all duration-300;
+}
+
+.mono-card-hover\:hover:hover {
+  @apply border-white/[0.15] bg-neutral-900;
+}
