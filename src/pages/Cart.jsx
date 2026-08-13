@@ -14,9 +14,9 @@ export default function Cart() {
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
 
   // Form States (Name, Phone, Address are user inputs in the checkout modal)
-  const [name, setName] = useState("Wanadri");
-  const [phone, setPhone] = useState("+62 813-2266-3825");
-  const [address, setAddress] = useState("Jl. Pagermaneuh No.31, Pagerwangi, Kec. Lembang, Kabupaten Bandung Barat, Jawa Barat 40391");
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
   
   // Automatic Order Metadata (Computed automatically, no inputs)
   const [orderNo, setOrderNo] = useState("");
@@ -371,8 +371,8 @@ Saya juga telah menyiapkan dokumen PDF Order Form untuk pesanan ini. Mohon info 
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-black border border-white/10 rounded px-4 py-3 text-sm text-white focus:border-white/30 outline-none transition-colors placeholder-neutral-700"
-                    placeholder="Nama Lengkap"
+                    className="w-full bg-black border border-white/10 rounded px-4 py-3 text-sm text-white focus:border-white/30 outline-none transition-colors placeholder-neutral-600"
+                    placeholder="Masukkan nama lengkap Anda..."
                   />
                 </div>
 
@@ -383,8 +383,8 @@ Saya juga telah menyiapkan dokumen PDF Order Form untuk pesanan ini. Mohon info 
                     type="text"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full bg-black border border-white/10 rounded px-4 py-3 text-sm text-white focus:border-white/30 outline-none transition-colors placeholder-neutral-700"
-                    placeholder="Contoh: +62 813..."
+                    className="w-full bg-black border border-white/10 rounded px-4 py-3 text-sm text-white focus:border-white/30 outline-none transition-colors placeholder-neutral-600"
+                    placeholder="Contoh: 081218124221"
                   />
                 </div>
 
@@ -395,8 +395,8 @@ Saya juga telah menyiapkan dokumen PDF Order Form untuk pesanan ini. Mohon info 
                     rows="3"
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
-                    className="w-full bg-black border border-white/10 rounded px-4 py-3 text-sm text-white focus:border-white/30 outline-none transition-colors placeholder-neutral-700 resize-none"
-                    placeholder="Alamat lengkap tujuan pengiriman..."
+                    className="w-full bg-black border border-white/10 rounded px-4 py-3 text-sm text-white focus:border-white/30 outline-none transition-colors placeholder-neutral-600 resize-none"
+                    placeholder="Tuliskan alamat lengkap tujuan pengiriman..."
                   />
                 </div>
               </div>
