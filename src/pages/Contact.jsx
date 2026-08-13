@@ -204,7 +204,7 @@ export default function Contact() {
                       </h4>
                     </div>
                     <p className="text-neutral-400 text-xs font-light leading-relaxed pl-11">
-                      Jl. Pagermaneuh No.31, Pagerwangi, Lembang, Kabupaten Bandung Barat, Jawa Barat 40391
+                      Komplek Griya Bandung Indah Blok F19 No. 55, Desa Buah Batu, Kec. Bojongsoang, Kab. Bandung
                     </p>
                   </div>
 
