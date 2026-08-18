@@ -21,19 +21,22 @@ import AdminOrders from "./pages/admin/AdminOrders";
 import AdminProducts from "./pages/admin/AdminProducts";
 
 import CatalogDownloadBanner from "./components/CatalogDownloadBanner";
+import MobileStickyContactBar from "./components/MobileStickyContactBar";
 
 import ErrorBoundary from "./components/ErrorBoundary";
 
 // Public site layout wrapper
 function ClientLayout() {
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
+    <div className="min-h-screen bg-black text-white flex flex-col pb-16 md:pb-0">
       <Navbar />
       <main className="flex-grow">
         <Outlet />
       </main>
       <CatalogDownloadBanner />
       <Footer />
+      {/* Mobile-Only Sticky Floating Contact Bar */}
+      <MobileStickyContactBar />
     </div>
   );
 }

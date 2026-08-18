@@ -1,19 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ChevronDown, ArrowRight, Mail, Phone } from 'lucide-react';
+import { ChevronDown, ArrowRight } from 'lucide-react';
 import { products } from '../data/products';
 import { generateProductCatalogPdfHtml } from '../utils/pdfGenerator';
-
-function InstagramIcon({ size = 20, className = "" }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
-      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
-      <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
-    </svg>
-  );
-}
 
 const staggerContainer = {
   hidden: { opacity: 0 },
@@ -135,43 +125,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 2. QUICK CONTACT ACTION BAR (Blokholds Style: Email | Phone | Instagram) */}
-      <section className="bg-[#1c1c1e] border-b border-white/10 py-4 sm:py-5 px-6">
-        <div className="max-w-2xl mx-auto grid grid-cols-3 divide-x divide-white/10 text-center">
-          {/* Email */}
-          <a
-            href="mailto:anemone@anemonegrip.com"
-            className="flex flex-col items-center justify-center gap-1 text-neutral-300 hover:text-white transition-colors group px-2"
-          >
-            <Mail size={22} className="group-hover:scale-110 transition-transform text-white" />
-            <span className="text-xs sm:text-sm font-medium tracking-wide">Email</span>
-          </a>
-
-          {/* Phone / WhatsApp */}
-          <a
-            href="https://wa.me/6281218124221"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex flex-col items-center justify-center gap-1 text-neutral-300 hover:text-white transition-colors group px-2"
-          >
-            <Phone size={22} className="group-hover:scale-110 transition-transform text-white" />
-            <span className="text-xs sm:text-sm font-medium tracking-wide">Phone</span>
-          </a>
-
-          {/* Instagram */}
-          <a
-            href="https://www.instagram.com/anemonegrip/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex flex-col items-center justify-center gap-1 text-neutral-300 hover:text-white transition-colors group px-2"
-          >
-            <InstagramIcon size={22} className="group-hover:scale-110 transition-transform text-white" />
-            <span className="text-xs sm:text-sm font-medium tracking-wide">Instagram</span>
-          </a>
-        </div>
-      </section>
-
-      {/* 3. CATEGORY SHOWCASE STRIPS */}
+      {/* 2. CATEGORY SHOWCASE STRIPS */}
       <section id="series-section" className="bg-black">
         {seriesStrips.map((strip) => (
           <div
