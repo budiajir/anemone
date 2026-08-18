@@ -22,6 +22,8 @@ import AdminProducts from "./pages/admin/AdminProducts";
 
 import CatalogDownloadBanner from "./components/CatalogDownloadBanner";
 
+import ErrorBoundary from "./components/ErrorBoundary";
+
 // Public site layout wrapper
 function ClientLayout() {
   return (
@@ -38,8 +40,9 @@ function ClientLayout() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <Routes>
         {/* Client Portal (with Public Navbar & Footer) */}
         <Route element={<ClientLayout />}>
           <Route path="/" element={<Home />} />
@@ -68,5 +71,6 @@ export default function App() {
         </Route>
       </Routes>
     </BrowserRouter>
+  </ErrorBoundary>
   );
 }

@@ -165,7 +165,7 @@ export default function Home() {
             rel="noopener noreferrer"
             className="flex flex-col items-center justify-center gap-1 text-neutral-300 hover:text-white transition-colors group px-2"
           >
-            <Instagram size={22} className="group-hover:scale-110 transition-transform text-white" />
+            <InstagramIcon size={22} className="group-hover:scale-110 transition-transform text-white" />
             <span className="text-xs sm:text-sm font-medium tracking-wide">Instagram</span>
           </a>
         </div>

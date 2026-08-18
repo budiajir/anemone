@@ -209,7 +209,7 @@ export default function Navbar() {
                     rel="noopener noreferrer"
                     className="flex flex-col items-center gap-1 text-neutral-400 hover:text-white transition-colors"
                   >
-                    <Instagram size={18} />
+                    <InstagramIcon size={18} />
                     <span className="text-[10px] uppercase font-bold tracking-wider">Instagram</span>
                   </a>
                 </div>
