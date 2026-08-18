@@ -1,43 +1,57 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Lock, User, ArrowLeft, ShieldAlert } from 'lucide-react';
+import { Lock, Mail, ArrowLeft, ShieldAlert, KeyRound } from 'lucide-react';
 import Logo from '../../components/Logo';
 
-export default function AdminLogin({ onLoginSuccess }) {
+export default function AdminLogin() {
   const navigate = useNavigate();
-  const [credentials, setCredentials] = useState({ username: '', password: '' });
+  const location = useLocation();
+  const from = location.state?.from?.pathname || '/admin';
+
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
-    const inputUser = credentials.username.trim().toLowerCase();
-    const inputPass = credentials.password.trim();
+    const inputUser = identifier.trim().toLowerCase();
+    const inputPass = password.trim();
 
-    // Required credentials:
-    // Username: anemone (also accept admin for fallback)
-    // Password: anemonehold123
-    const validUsers = ['anemone', 'admin'];
-    const validPasswords = ['anemonehold123', 'admin'];
+    // Accepted valid login credentials:
+    // Email / User: anemone@anemonegrip.com, anemone, admin, owner
+    // Master Password / Secret Key: anemonehold123, admin, admin123
+    const validIdentifiers = [
+      'anemone@anemonegrip.com',
+      'anemone',
+      'admin@anemonegrip.com',
+      'admin',
+      'owner'
+    ];
+    const validPasswords = ['anemonehold123', 'admin', 'admin123'];
 
-    if (validUsers.includes(inputUser) && validPasswords.includes(inputPass)) {
-      if (rememberMe) {
-        localStorage.setItem('anemone_admin_auth', 'true');
+    setTimeout(() => {
+      if (validIdentifiers.includes(inputUser) && validPasswords.includes(inputPass)) {
+        if (rememberMe) {
+          localStorage.setItem('anemone_admin_auth', 'true');
+          sessionStorage.setItem('anemone_admin_auth', 'true');
+        } else {
+          sessionStorage.setItem('anemone_admin_auth', 'true');
+          localStorage.removeItem('anemone_admin_auth');
+        }
+
+        // Redirect to target path
+        navigate(from, { replace: true });
       } else {
-        sessionStorage.setItem('anemone_admin_auth', 'true');
+        setError('Email atau Master Password tidak valid. Silakan periksa kembali.');
+        setLoading(false);
       }
-
-      if (onLoginSuccess) {
-        onLoginSuccess();
-      } else {
-        navigate('/admin');
-      }
-    } else {
-      setError('Username atau Password salah. Silakan coba lagi.');
-    }
+    }, 250);
   };
 
   return (
@@ -58,16 +72,16 @@ export default function AdminLogin({ onLoginSuccess }) {
             <ArrowLeft size={14} />
             <span>Kembali ke Website</span>
           </Link>
-          <span className="font-mono text-[9px] uppercase tracking-widest text-neutral-600 border border-white/10 px-2 py-0.5 rounded-sm">
-            SECURE PORTAL
+          <span className="font-mono text-[9px] uppercase tracking-widest text-neutral-500 border border-white/10 px-2 py-0.5 rounded-sm">
+            PROTECTED PORTAL
           </span>
         </div>
 
-        {/* Login Card */}
+        {/* Login Card (Minimalist SUPR Climbing Style) */}
         <motion.div
           initial={{ opacity: 0, scale: 0.96, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
+          transition={{ duration: 0.3 }}
           className="bg-[#0a0a0a] border border-white/10 rounded-sm p-8 sm:p-10 space-y-8 shadow-2xl"
         >
           {/* Logo & Header */}
@@ -77,7 +91,7 @@ export default function AdminLogin({ onLoginSuccess }) {
             </Link>
             <div className="space-y-1 pt-2">
               <span className="font-mono text-[10px] font-bold uppercase tracking-[0.25em] text-neutral-500 block">
-                ADMINISTRATION PORTAL
+                ADMINISTRATION ACCESS
               </span>
               <h1 className="text-2xl font-black uppercase tracking-tight text-white text-center">
                 ADMIN LOGIN
@@ -99,39 +113,39 @@ export default function AdminLogin({ onLoginSuccess }) {
 
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Username Input */}
+            {/* Email / Username Field */}
             <div className="space-y-2">
               <label className="font-mono text-[10px] font-bold uppercase tracking-widest text-neutral-400 block">
-                USERNAME
+                EMAIL / USERNAME
               </label>
               <div className="relative">
                 <input
                   type="text"
                   required
-                  value={credentials.username}
-                  onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
-                  placeholder="anemone"
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
+                  placeholder="anemone@anemonegrip.com"
                   className="w-full bg-black border border-white/10 rounded-sm pl-11 pr-4 py-3 text-xs font-mono text-white focus:border-white/40 outline-none transition-all placeholder-neutral-700"
                 />
-                <User size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500" />
+                <Mail size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500" />
               </div>
             </div>
 
-            {/* Password Input */}
+            {/* Master Password / Secret Key Field */}
             <div className="space-y-2">
               <label className="font-mono text-[10px] font-bold uppercase tracking-widest text-neutral-400 block">
-                PASSWORD
+                MASTER PASSWORD / SECRET KEY
               </label>
               <div className="relative">
                 <input
                   type="password"
                   required
-                  value={credentials.password}
-                  onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   className="w-full bg-black border border-white/10 rounded-sm pl-11 pr-4 py-3 text-xs font-mono text-white focus:border-white/40 outline-none transition-all placeholder-neutral-700"
                 />
-                <Lock size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500" />
+                <KeyRound size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500" />
               </div>
             </div>
 
@@ -151,9 +165,10 @@ export default function AdminLogin({ onLoginSuccess }) {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full bg-white text-black font-black uppercase tracking-widest text-xs py-4 rounded-sm hover:bg-neutral-200 transition-colors cursor-pointer flex items-center justify-center gap-2 pt-3.5"
+              disabled={loading}
+              className="w-full bg-white text-black font-black uppercase tracking-widest text-xs py-4 rounded-sm hover:bg-neutral-200 transition-colors cursor-pointer flex items-center justify-center gap-2 pt-3.5 disabled:opacity-50"
             >
-              <span>MASUK DASHBOARD</span>
+              <span>{loading ? 'AUTHENTICATING...' : 'MASUK DASHBOARD'}</span>
             </button>
           </form>
         </motion.div>

@@ -13,6 +13,8 @@ import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
 
 // Admin Panel Components
+import ProtectedRoute from "./components/ProtectedRoute";
+import AdminLogin from "./pages/admin/AdminLogin";
 import AdminLayout from "./components/AdminLayout";
 import AdminOverview from "./pages/admin/AdminOverview";
 import AdminOrders from "./pages/admin/AdminOrders";
@@ -53,11 +55,16 @@ export default function App() {
           <Route path="/order-success" element={<OrderSuccess />} />
         </Route>
 
-        {/* Isolated Admin Dashboard (uses its own Sidebar layout) */}
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<AdminOverview />} />
-          <Route path="orders" element={<AdminOrders />} />
-          <Route path="products" element={<AdminProducts />} />
+        {/* Admin Login Route (Public within Admin domain) */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+
+        {/* Protected Admin Dashboard (Requires Authentication) */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminOverview />} />
+            <Route path="orders" element={<AdminOrders />} />
+            <Route path="products" element={<AdminProducts />} />
+          </Route>
         </Route>
       </Routes>
     </BrowserRouter>

@@ -1,29 +1,19 @@
 import React, { useState } from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Package, Box, ArrowLeft, User, Menu, X, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Logo from './Logo';
-import AdminLogin from '../pages/admin/AdminLogin';
 
 export default function AdminLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return (
-      localStorage.getItem('anemone_admin_auth') === 'true' ||
-      sessionStorage.getItem('anemone_admin_auth') === 'true'
-    );
-  });
 
   const handleLogout = () => {
     localStorage.removeItem('anemone_admin_auth');
     sessionStorage.removeItem('anemone_admin_auth');
-    setIsAuthenticated(false);
+    navigate('/admin/login', { replace: true });
   };
-
-  if (!isAuthenticated) {
-    return <AdminLogin onLoginSuccess={() => setIsAuthenticated(true)} />;
-  }
 
   const navItems = [
     { name: 'Overview', path: '/admin', icon: LayoutDashboard },
