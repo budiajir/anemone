@@ -1,7 +1,8 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import Logo from "./Logo";
 
-const footerColumns = {
+const footerLinks = {
   Shop: [
     { name: "Holds & Volumes", path: "/shop?category=Holds" },
     { name: "Hangboard", path: "/shop?category=Hangboard" },
@@ -13,9 +14,14 @@ const footerColumns = {
     { name: "Contact", path: "/contact" },
     { name: "Shop", path: "/shop" },
   ],
+  Support: [
+    { name: "FAQ", path: "/" },
+    { name: "Shipping", path: "/" },
+    { name: "Returns", path: "/" },
+  ],
 };
 
-const socialLinks = [
+const socialIcons = [
   {
     name: "Instagram",
     href: "https://www.instagram.com/anemonegrip/",
@@ -48,84 +54,139 @@ const socialLinks = [
   },
 ];
 
-const bottomLinks = [
-  { name: "Terms & Conditions", path: "#" },
-  { name: "Privacy Policy", path: "#" },
-];
-
 export default function Footer() {
   return (
-    <footer className="relative z-10 bg-[#1a1a1a]">
+    <footer className="relative z-10">
 
-      {/* Main Footer Content */}
-      <div className="max-w-3xl mx-auto px-8 pt-14 pb-10">
+      {/* ========== MOBILE FOOTER (Elite Exped Style) ========== */}
+      <div className="md:hidden bg-[#1a1a1a]">
+        <div className="max-w-lg mx-auto px-8 pt-14 pb-10">
 
-        {/* Two-Column Link Grid */}
-        <div className="grid grid-cols-2 gap-x-12 gap-y-8">
-          {Object.entries(footerColumns).map(([title, links]) => (
-            <div key={title} className="space-y-5">
-              <h4 className="text-white text-base font-bold tracking-wide">
-                {title}
-              </h4>
-              <ul className="space-y-3">
-                {links.map((link) => (
-                  <li key={link.name}>
-                    <Link
-                      to={link.path}
-                      className="text-neutral-400 hover:text-white text-sm transition-colors"
-                    >
-                      {link.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          {/* Two-Column Link Grid */}
+          <div className="grid grid-cols-2 gap-x-12 gap-y-8">
+            {Object.entries(footerLinks).slice(0, 2).map(([title, links]) => (
+              <div key={title} className="space-y-5">
+                <h4 className="text-white text-base font-bold tracking-wide">
+                  {title}
+                </h4>
+                <ul className="space-y-3">
+                  {links.map((link) => (
+                    <li key={link.name}>
+                      <Link
+                        to={link.path}
+                        className="text-neutral-400 hover:text-white text-sm transition-colors"
+                      >
+                        {link.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+
+          {/* Social Icons Row */}
+          <div className="flex items-center justify-center gap-8 pt-12 pb-10">
+            {socialIcons.map((social) => (
+              <a
+                key={social.name}
+                href={social.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-neutral-500 hover:text-white transition-colors"
+                aria-label={social.name}
+              >
+                {social.icon}
+              </a>
+            ))}
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-white/15" />
+
+          {/* Bottom Links */}
+          <div className="flex flex-col items-center gap-3 pt-8 pb-4">
+            <a href="#" className="text-neutral-400 hover:text-white text-sm transition-colors">Terms & Conditions</a>
+            <a href="#" className="text-neutral-400 hover:text-white text-sm transition-colors">Privacy Policy</a>
+          </div>
+
+          {/* Copyright & Made In */}
+          <div className="flex flex-col items-center gap-2 pt-4 pb-2 text-center">
+            <p className="text-neutral-500 text-xs">© 2026 Anemone Climbing Holds</p>
+            <p className="text-neutral-500 text-xs">
+              Made in <span className="text-white font-semibold">Bandung</span>
+            </p>
+          </div>
         </div>
-
-        {/* Social Icons Row */}
-        <div className="flex items-center justify-center gap-8 pt-12 pb-10">
-          {socialLinks.map((social) => (
-            <a
-              key={social.name}
-              href={social.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-neutral-500 hover:text-white transition-colors"
-              aria-label={social.name}
-            >
-              {social.icon}
-            </a>
-          ))}
-        </div>
-
-        {/* Divider Line */}
-        <div className="border-t border-white/15" />
-
-        {/* Bottom Links */}
-        <div className="flex flex-col items-center gap-3 pt-8 pb-4">
-          {bottomLinks.map((link) => (
-            <a
-              key={link.name}
-              href={link.path}
-              className="text-neutral-400 hover:text-white text-sm transition-colors"
-            >
-              {link.name}
-            </a>
-          ))}
-        </div>
-
-        {/* Copyright & Made In */}
-        <div className="flex flex-col items-center gap-2 pt-4 pb-2 text-center">
-          <p className="text-neutral-500 text-xs">
-            © 2026 Anemone Climbing Holds
-          </p>
-          <p className="text-neutral-500 text-xs">
-            Made in <span className="text-white font-semibold">Bandung</span>
-          </p>
-        </div>
-
       </div>
+
+      {/* ========== DESKTOP FOOTER (Original Style) ========== */}
+      <div className="hidden md:block border-t border-white/10 bg-black">
+        <div className="max-w-7xl mx-auto px-6 md:px-8 py-16 md:py-24">
+          <div className="grid grid-cols-12 gap-y-12 gap-x-12">
+
+            {/* Column 1: Brand + Description + Socials */}
+            <div className="col-span-4 space-y-6">
+              <Link to="/" className="inline-block hover:opacity-90 transition-opacity">
+                <Logo className="h-10 sm:h-12" />
+              </Link>
+              <p className="text-neutral-400 text-sm leading-relaxed font-light max-w-xs">
+                Premium climbing holds, training gear, and smart wall technology — built by climbers, for climbers.
+              </p>
+              <div className="flex items-center gap-5 pt-2">
+                {socialIcons.map((social) => (
+                  <a
+                    key={social.name}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-neutral-600 hover:text-white transition-colors"
+                    aria-label={social.name}
+                  >
+                    {social.icon}
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            {/* Columns 2-4: Link Groups */}
+            <div className="col-span-8 grid grid-cols-3 gap-y-10 gap-x-8">
+              {Object.entries(footerLinks).map(([title, links]) => (
+                <div key={title} className="space-y-5">
+                  <h4 className="text-white text-xs font-bold uppercase tracking-widest">
+                    {title}
+                  </h4>
+                  <ul className="space-y-3">
+                    {links.map((link) => (
+                      <li key={link.name}>
+                        <Link
+                          to={link.path}
+                          className="text-neutral-500 hover:text-white uppercase text-xs tracking-wider transition-colors"
+                        >
+                          {link.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Desktop Bottom Bar */}
+        <div className="border-t border-white/[0.06]">
+          <div className="max-w-7xl mx-auto px-6 md:px-8 py-6 flex items-center justify-between gap-4 text-xs text-neutral-600 font-light">
+            <p>© 2026 Anemone. All rights reserved.</p>
+            <div className="flex items-center gap-6">
+              <a href="#" className="hover:text-white transition-colors uppercase tracking-wider">Privacy</a>
+              <a href="#" className="hover:text-white transition-colors uppercase tracking-wider">Terms</a>
+              <a href="#" className="hover:text-white transition-colors uppercase tracking-wider">Sitemap</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </footer>
   );
 }
