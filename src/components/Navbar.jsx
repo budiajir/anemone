@@ -125,109 +125,100 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile Fullscreen Menu Drawer */}
+      {/* Mobile Menu Drawer (Elite Exped Style) */}
       <AnimatePresence>
         {mobileOpen && (
           <>
-            {/* Dark blur backdrop */}
+            {/* Semi-transparent backdrop — page slightly visible on right */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md md:hidden"
+              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm md:hidden"
               onClick={() => setMobileOpen(false)}
             />
             
-            {/* Drawer Panel */}
+            {/* Drawer Panel — ~85% width, dark background */}
             <motion.div
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }}
-              className="fixed top-0 left-0 bottom-0 z-50 w-full sm:w-80 bg-neutral-950 border-r border-white/10 p-6 flex flex-col justify-between md:hidden"
+              className="fixed top-0 left-0 bottom-0 z-50 w-[85%] max-w-sm bg-[#1a1a1a] flex flex-col md:hidden"
             >
-              {/* Header */}
-              <div className="flex items-center justify-between pb-6 border-b border-white/10">
-                <Logo className="h-7" />
+              {/* Header: Logo + Close */}
+              <div className="flex items-center justify-between px-6 py-6">
+                <Logo className="h-8" />
                 <button
                   onClick={() => setMobileOpen(false)}
-                  className="p-2 text-neutral-400 hover:text-white transition-all rounded-md hover:bg-white/5"
+                  className="p-1.5 text-neutral-400 hover:text-white transition-colors"
                   aria-label="Close Menu"
                 >
-                  <X size={24} />
+                  <X size={26} />
                 </button>
               </div>
 
-              {/* Links Navigation */}
-              <nav className="flex-1 py-8 flex flex-col gap-1">
+              {/* Navigation Links — large uppercase with dividers */}
+              <nav className="flex-1 flex flex-col pt-6">
                 {navLinks.map((link, idx) => (
                   <motion.div
                     key={link.path}
-                    initial={{ opacity: 0, x: -20 }}
+                    initial={{ opacity: 0, x: -15 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: idx * 0.04 }}
                   >
                     <Link
                       to={link.path}
                       onClick={() => setMobileOpen(false)}
-                      className={`flex items-center justify-between px-4 py-3.5 rounded-md text-sm font-bold uppercase tracking-widest transition-colors ${
+                      className={`flex items-center justify-between px-6 py-5 border-b border-white/10 transition-colors ${
                         location.pathname === link.path
-                          ? "text-white bg-white/10"
-                          : "text-neutral-400 hover:text-white hover:bg-white/5"
+                          ? "text-white"
+                          : "text-neutral-300 active:bg-white/5"
                       }`}
                     >
-                      <span>{link.name}</span>
-                      <ArrowRight size={16} className="text-neutral-500" />
+                      <span className="text-lg font-bold uppercase tracking-wider">{link.name}</span>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-500">
+                        <path d="m9 18 6-6-6-6"/>
+                      </svg>
                     </Link>
                   </motion.div>
                 ))}
+
+                {/* Shop / Cart link without arrow */}
+                <motion.div
+                  initial={{ opacity: 0, x: -15 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: navLinks.length * 0.04 }}
+                >
+                  <Link
+                    to="/cart"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-3 px-6 py-5 text-neutral-300 active:bg-white/5 transition-colors"
+                  >
+                    <ShoppingCart size={20} />
+                    <span className="text-lg font-bold uppercase tracking-wider">Cart</span>
+                    {itemCount > 0 && (
+                      <span className="ml-auto w-6 h-6 bg-white text-black text-xs font-black rounded-full flex items-center justify-center">
+                        {itemCount}
+                      </span>
+                    )}
+                  </Link>
+                </motion.div>
               </nav>
 
-              {/* Mobile Menu Bottom Quick Contact & Cart */}
-              <div className="border-t border-white/10 pt-6 space-y-5">
-                {/* 3 Quick Action Contact Icons */}
-                <div className="grid grid-cols-3 gap-2 text-center border border-white/10 rounded-md p-3 bg-black">
-                  <a
-                    href="mailto:anemone@anemonegrip.com"
-                    className="flex flex-col items-center gap-1 text-neutral-400 hover:text-white transition-colors"
-                  >
-                    <Mail size={18} />
-                    <span className="text-[10px] uppercase font-bold tracking-wider">Email</span>
-                  </a>
-                  <a
-                    href="https://wa.me/6281218124221"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex flex-col items-center gap-1 text-neutral-400 hover:text-white transition-colors border-x border-white/10"
-                  >
-                    <Phone size={18} />
-                    <span className="text-[10px] uppercase font-bold tracking-wider">Phone</span>
-                  </a>
-                  <a
-                    href="https://www.instagram.com/anemonegrip/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex flex-col items-center gap-1 text-neutral-400 hover:text-white transition-colors"
-                  >
-                    <InstagramIcon size={18} />
-                    <span className="text-[10px] uppercase font-bold tracking-wider">Instagram</span>
-                  </a>
-                </div>
-
-                <Link
-                  to="/cart"
-                  onClick={() => setMobileOpen(false)}
-                  className="w-full bg-white text-black font-black uppercase tracking-wider py-3.5 rounded-md flex items-center justify-center gap-2 hover:bg-neutral-200 transition-all text-xs"
+              {/* Bottom: WhatsApp CTA Button */}
+              <div className="px-6 pb-8 pt-4">
+                <a
+                  href="https://wa.me/6281218124221"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full flex items-center justify-center gap-3 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-sm tracking-wide py-4 rounded-full transition-colors"
                 >
-                  <ShoppingCart size={16} />
-                  <span>View Cart ({itemCount})</span>
-                </Link>
-                
-                <div className="text-center">
-                  <p className="text-[10px] text-neutral-600 uppercase tracking-widest font-mono">
-                    &copy; 2026 ANEMONE CLIMBING HOLDS
-                  </p>
-                </div>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                  </svg>
+                  <span>Chat on WhatsApp</span>
+                </a>
               </div>
             </motion.div>
           </>
