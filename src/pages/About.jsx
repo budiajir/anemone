@@ -117,117 +117,70 @@ export default function About() {
       </section>
 
       {/* ═══════════════════════════════════════
-          ROW 1 — WHO WE ARE (left) + MATERIALS (right)
+          ENGINEERED MATERIALS SECTION (FULL WIDTH)
           ═══════════════════════════════════════ */}
       <section className="py-20 md:py-28 bg-black border-b border-white/10">
-        <div className="max-w-6xl mx-auto px-6 md:px-12 w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+        <div className="max-w-6xl mx-auto px-6 md:px-12 w-full space-y-12">
+          
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={fadeUp}
+            className="text-center max-w-2xl mx-auto space-y-4"
+          >
+            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.25em] text-neutral-500 block">
+              MATERIAL SPECIFICATIONS
+            </span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black uppercase tracking-tight text-white">
+              ENGINEERED MATERIALS
+            </h2>
+            <p className="text-neutral-400 text-sm font-light leading-relaxed">
+              Setiap material dipilih dan diuji untuk memenuhi standar kompetisi internasional dan ketahanan penggunaan komersial harian.
+            </p>
+          </motion.div>
 
-            {/* LEFT — Who We Are */}
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={stagger}
-              className="space-y-8"
-            >
-              <motion.div variants={fadeUp} className="space-y-4">
-                <span className="font-mono text-[10px] font-bold uppercase tracking-[0.25em] text-neutral-500 block">
-                  THE SHAPERS COLLECTIVE
-                </span>
-                <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white">
-                  WHO WE ARE
-                </h2>
-              </motion.div>
-
-              <motion.div variants={fadeUp} className="space-y-5">
-                <p className="text-neutral-300 text-sm sm:text-base font-light leading-relaxed">
-                  Anemone lahir dari keresahan pemanjat dan route setter aktif
-                  yang menginginkan cengkeraman ideal — holds yang tidak hanya
-                  terasa pas di tangan, tetapi juga mendorong kreativitas
-                  gerakan di dinding.
-                </p>
-                <p className="text-neutral-300 text-sm sm:text-base font-light leading-relaxed">
-                  Kami percaya bahwa setiap bentuk harus diproses dengan tangan
-                  melalui shaping manual, diuji langsung di dinding panjat, dan
-                  disempurnakan melalui sesi latihan berulang sampai setiap
-                  lekukan terasa benar.
-                </p>
-                <p className="text-neutral-300 text-sm sm:text-base font-light leading-relaxed">
-                  Tim kami terdiri dari pemanjat kompetisi, chief routesetter
-                  berpengalaman lebih dari satu dekade, dan insinyur material
-                  yang obsesif terhadap detail tekstur permukaan. Setiap
-                  produk yang keluar dari workshop Anemone adalah hasil
-                  kolaborasi langsung antara shaper, setter, dan pemanjat.
-                </p>
-              </motion.div>
-
-              <motion.div variants={fadeUp} className="pt-6 border-t border-white/10">
-                <p className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white leading-tight">
-                  BUILT BY CLIMBERS,<br />FOR CLIMBERS.
-                </p>
-              </motion.div>
-            </motion.div>
-
-            {/* RIGHT — Engineered Materials */}
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={stagger}
-              className="space-y-8"
-            >
-              <motion.div variants={fadeUp} className="space-y-4">
-                <span className="font-mono text-[10px] font-bold uppercase tracking-[0.25em] text-neutral-500 block">
-                  MATERIAL SPECIFICATIONS
-                </span>
-                <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white">
-                  ENGINEERED MATERIALS
-                </h2>
-                <p className="text-neutral-400 text-sm font-light leading-relaxed">
-                  Setiap material dipilih dan diuji untuk memenuhi standar
-                  kompetisi internasional dan ketahanan penggunaan komersial
-                  harian.
-                </p>
-              </motion.div>
-
-              <motion.div variants={stagger} className="space-y-4">
-                {materials.map((mat) => (
-                  <motion.div
-                    key={mat.title}
-                    variants={fadeUp}
-                    className="bg-[#0a0a0a] border border-white/10 rounded-sm p-5 space-y-4 hover:border-white/25 transition-colors group"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-sm bg-white/5 border border-white/10 flex items-center justify-center text-white group-hover:bg-white/10 transition-colors">
-                          {mat.icon}
-                        </div>
-                        <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-white">
-                          {mat.title}
-                        </h3>
-                      </div>
-                      <span className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-neutral-500 bg-white/5 border border-white/10 px-2 py-0.5 rounded">
-                        {mat.tag}
-                      </span>
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={stagger}
+            className="grid grid-cols-1 md:grid-cols-3 gap-6"
+          >
+            {materials.map((mat) => (
+              <motion.div
+                key={mat.title}
+                variants={fadeUp}
+                className="bg-[#0a0a0a] border border-white/10 rounded-sm p-6 space-y-4 hover:border-white/25 transition-colors group flex flex-col justify-between"
+              >
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="w-10 h-10 rounded-sm bg-white/5 border border-white/10 flex items-center justify-center text-white group-hover:bg-white/10 transition-colors">
+                      {mat.icon}
                     </div>
-                    <p className="text-neutral-400 text-xs font-light leading-relaxed">
-                      {mat.description}
-                    </p>
-                    <div className="pt-3 border-t border-white/10 flex flex-wrap gap-x-4 gap-y-1.5">
-                      {mat.specs.map((spec, i) => (
-                        <div key={i} className="flex items-center gap-2">
-                          <span className="w-1 h-1 bg-white/40 rounded-full shrink-0" />
-                          <span className="text-neutral-300 text-[11px] font-light">{spec}</span>
-                        </div>
-                      ))}
+                    <span className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-neutral-500 bg-white/5 border border-white/10 px-2.5 py-1 rounded">
+                      {mat.tag}
+                    </span>
+                  </div>
+                  <h3 className="text-sm font-black uppercase tracking-wider text-white">
+                    {mat.title}
+                  </h3>
+                  <p className="text-neutral-400 text-xs font-light leading-relaxed">
+                    {mat.description}
+                  </p>
+                </div>
+                <div className="pt-4 border-t border-white/10 flex flex-col gap-2">
+                  {mat.specs.map((spec, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <span className="w-1 h-1 bg-white/40 rounded-full shrink-0" />
+                      <span className="text-neutral-300 text-[11px] font-light">{spec}</span>
                     </div>
-                  </motion.div>
-                ))}
+                  ))}
+                </div>
               </motion.div>
-            </motion.div>
+            ))}
+          </motion.div>
 
-          </div>
         </div>
       </section>
 
@@ -329,7 +282,6 @@ export default function About() {
           </div>
         </div>
       </section>
-
 
     </div>
   );
