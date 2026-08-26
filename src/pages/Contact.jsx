@@ -25,7 +25,7 @@ export default function Contact() {
 ${formData.message}`;
 
     const encodedText = encodeURIComponent(messageText);
-    window.open(`https://wa.me/6281218124221?text=${encodedText}`, '_blank');
+    window.open(`https://wa.me/628569044778?text=${encodedText}`, '_blank');
 
     setSubmitted(true);
     setTimeout(() => {
@@ -65,13 +65,13 @@ ${formData.message}`;
             </a>
 
             <a
-              href="https://wa.me/6281218124221"
+              href="https://wa.me/628569044778"
               target="_blank"
               rel="noopener noreferrer"
               className="w-full sm:w-[380px] bg-[#1a1a1a] border border-teal text-teal font-semibold text-sm sm:text-base px-8 py-4 rounded-2xl hover:bg-teal hover:text-black transition-all flex items-center justify-center gap-3 cursor-pointer shadow-lg group"
             >
               <Phone size={19} className="text-teal group-hover:text-black transition-colors" />
-              <span>+62 812 1812 4221</span>
+              <span>+62 856 9044 778</span>
             </a>
 
             <a
@@ -248,7 +248,7 @@ ${formData.message}`;
                       </h4>
                     </div>
                     <p className="text-neutral-400 text-xs font-light leading-relaxed pl-11">
-                      Respon cepat WhatsApp resmi <span className="text-teal font-mono font-bold">+62 812 1812 4221</span> untuk pertanyaan stok &amp; pengiriman sampel holds.
+                      Respon cepat WhatsApp resmi <span className="text-teal font-mono font-bold">+62 856 9044 778</span> untuk pertanyaan stok &amp; pengiriman sampel holds.
                     </p>
                   </div>
                 </div>

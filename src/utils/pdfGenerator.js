@@ -15,7 +15,7 @@ export function generateOrderFormPdfHtml(order = {}) {
 
   // Extract customer info
   const customerName = order.customer?.fullName || order.customer || 'Pelanggan Anemone';
-  const customerPhone = order.customer?.phone || order.details?.customer?.phone || '+62 812-1812-4221';
+  const customerPhone = order.customer?.phone || order.details?.customer?.phone || '+62 856-9044-778';
   const customerAddress = order.customer?.address || order.details?.customer?.address || 'Komplek Griya Bandung Indah Blok F19 No. 55, Desa Buah Batu, Kec. Bojongsoang, Kab. Bandung';
 
   // Format Items

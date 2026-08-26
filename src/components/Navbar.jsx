@@ -209,7 +209,7 @@ export default function Navbar() {
               {/* Bottom: WhatsApp CTA Button */}
               <div className="px-6 pb-8 pt-4">
                 <a
-                  href="https://wa.me/6281218124221"
+                  href="https://wa.me/628569044778"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full flex items-center justify-center gap-3 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-sm tracking-wide py-4 rounded-full transition-colors"

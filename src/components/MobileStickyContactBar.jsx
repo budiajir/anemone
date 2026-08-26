@@ -27,7 +27,7 @@ export default function MobileStickyContactBar() {
 
         {/* 2. Phone / WhatsApp */}
         <a
-          href="https://wa.me/6281218124221"
+          href="https://wa.me/628569044778"
           target="_blank"
           rel="noopener noreferrer"
           className="flex flex-col items-center justify-center gap-1 text-neutral-300 active:text-white active:bg-white/5 py-1 transition-colors"

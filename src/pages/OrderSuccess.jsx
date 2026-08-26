@@ -39,7 +39,7 @@ export default function OrderSuccess() {
   const handleSendWhatsApp = () => {
     const messageText = `Halo Anemone, pesanan saya telah berhasil dibuat!\n\n📝 *ORDER NO:* ${mockOrderId}\n📅 *Tanggal:* ${dateStr}\n status: *Processing*\n\nMohon info proses pengiriman pesanan saya. Terima kasih!`;
     const encodedText = encodeURIComponent(messageText);
-    const businessWhatsAppNumber = "6281218124221";
+    const businessWhatsAppNumber = "628569044778";
     window.open(`https://wa.me/${businessWhatsAppNumber}?text=${encodedText}`, '_blank');
   };
 

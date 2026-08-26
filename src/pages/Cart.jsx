@@ -75,7 +75,7 @@ Saya juga telah menyiapkan dokumen PDF Order Form untuk pesanan ini. Mohon info 
 
     const encodedText = encodeURIComponent(messageText);
     // Anemone Business WhatsApp Number (using international format)
-    const businessWhatsAppNumber = "6281218124221"; 
+    const businessWhatsAppNumber = "628569044778"; 
     const whatsappUrl = `https://wa.me/${businessWhatsAppNumber}?text=${encodedText}`;
     
     // Save to shared store for Admin Panel
@@ -380,7 +380,7 @@ Saya juga telah menyiapkan dokumen PDF Order Form untuk pesanan ini. Mohon info 
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     className="w-full bg-black border border-white/10 rounded px-4 py-3 text-sm text-white focus:border-white/30 outline-none transition-colors placeholder-neutral-600"
-                    placeholder="Contoh: 081218124221"
+                    placeholder="Contoh: 08569044778"
                   />
                 </div>
 
