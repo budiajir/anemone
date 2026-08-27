@@ -24,12 +24,30 @@ export default function Home() {
   const seriesStrips = [
     {
       id: "holds",
-      title: "GRIPS & CHIPS",
-      subtitle: "PE & PU Climbing Holds | First Batch of 2026 Edition",
+      title: "HOLD & MACROS",
+      subtitle: "PE & PU Climbing Holds & Fiberglass Macros | 2026 Edition",
       categoryName: "Holds",
       path: "/shop?category=Holds",
       bgImage: "/images/motela.png",
-      tag: "Signature Holds"
+      tag: "Signature Series"
+    },
+    {
+      id: "volumes",
+      title: "VOLUMES",
+      subtitle: "Precision Baltic Birch Plywood & Fiberglass Geometric Volumes",
+      categoryName: "Volumes",
+      path: "/shop?category=Volumes",
+      bgImage: "/images/cucu_chips.png",
+      tag: "Volume Series"
+    },
+    {
+      id: "accessories",
+      title: "ACCESSORIES",
+      subtitle: "Climbing Gear, Hardware, Training Tools & Essentials",
+      categoryName: "Accessories",
+      path: "/shop?category=Accessories",
+      bgImage: "/images/eclipse.png",
+      tag: "Gear & Accessories"
     },
     {
       id: "smartwall",
@@ -39,24 +57,6 @@ export default function Home() {
       path: "/smart-wall",
       bgImage: "/images/argus.png",
       tag: "Interactive Hardware"
-    },
-    {
-      id: "hangboard",
-      title: "TRAINING GEAR",
-      subtitle: "Carved Beech Wood Fingerboards for Max Strength",
-      categoryName: "Training Board",
-      path: "/shop?category=Hangboard",
-      bgImage: "/images/cucu_chips.png",
-      tag: "Hangboard Series"
-    },
-    {
-      id: "essentials",
-      title: "BOULDERING ESSENTIALS",
-      subtitle: "Multi-Layer Crash Pads & Ultra-Pure Magnesium Chalk",
-      categoryName: "Essentials",
-      path: "/shop?category=Bouldering+Essentials",
-      bgImage: "/images/eclipse.png",
-      tag: "Gear & Accessories"
     }
   ];
 

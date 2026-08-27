@@ -29,7 +29,7 @@ export default function AdminProducts() {
     description: ''
   });
 
-  const categories = ['All', 'Holds', 'Macros', 'Volumes', 'Hangboard', 'Bouldering Essentials', 'Smart Wall Kit'];
+  const categories = ['All', 'Holds', 'Macros', 'Volumes', 'Accessories', 'Smart Wall Kit'];
 
   const filteredProducts = useMemo(() => {
     if (categoryFilter === 'all') return productList;
@@ -463,8 +463,7 @@ export default function AdminProducts() {
                       <option value="Holds" className="bg-black">Holds</option>
                       <option value="Macros" className="bg-black">Macros</option>
                       <option value="Volumes" className="bg-black">Volumes</option>
-                      <option value="Hangboard" className="bg-black">Hangboard</option>
-                      <option value="Bouldering Essentials" className="bg-black">Bouldering Essentials</option>
+                      <option value="Accessories" className="bg-black">Accessories</option>
                       <option value="Smart Wall Kit" className="bg-black">Smart Wall Kit</option>
                     </select>
                   </div>

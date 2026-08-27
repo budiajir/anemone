@@ -138,8 +138,7 @@ export const categories = [
   "Holds",
   "Macros",
   "Volumes",
-  "Hangboard",
-  "Bouldering Essentials",
+  "Accessories",
   "Smart Wall Kit",
 ];
 

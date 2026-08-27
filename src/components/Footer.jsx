@@ -4,9 +4,9 @@ import Logo from "./Logo";
 
 const footerLinks = {
   Shop: [
-    { name: "Holds & Volumes", path: "/shop?category=Holds" },
-    { name: "Hangboard", path: "/shop?category=Hangboard" },
-    { name: "Bouldering Essentials", path: "/shop?category=Bouldering+Essentials" },
+    { name: "Hold & Macros", path: "/shop?category=Holds" },
+    { name: "Volumes", path: "/shop?category=Volumes" },
+    { name: "Accessories", path: "/shop?category=Accessories" },
     { name: "Smart Wall Kit", path: "/smart-wall" },
   ],
   Company: [
@@ -131,7 +131,7 @@ export default function Footer() {
                 <Logo className="h-10 sm:h-12" />
               </Link>
               <p className="text-neutral-400 text-sm leading-relaxed font-light max-w-xs">
-                Premium climbing holds, training gear, and smart wall technology — built by climbers, for climbers.
+                Premium climbing holds, macros, volumes, and smart wall technology — built by climbers, for climbers.
               </p>
               <div className="flex items-center gap-5 pt-2">
                 {socialIcons.map((social) => (
