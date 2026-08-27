@@ -318,7 +318,7 @@ export function generateProductCatalogPdfHtml(productsList = []) {
           ${prod.name}
         </div>
         <div style="font-size: 12px; color: #666; margin-top: 4px;">
-          ${prod.shortDescription || prod.description || '100% Virgin Polyurethane & Baltic Birch Plywood Specs'}
+          ${prod.shortDescription || prod.description || '100% Virgin Polyurethane & Plywood Specs'}
         </div>
       </div>
       <div style="text-align: right; shrink: 0; padding-left: 20px;">

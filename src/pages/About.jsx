@@ -16,7 +16,7 @@ const stagger = {
   },
 };
 
-/* ─── DATA (Volumes is strictly Baltic Birch Plywood) ─── */
+/* ─── DATA (Volumes is strictly Plywood) ─── */
 const materials = [
   {
     icon: <Layers size={20} />,
@@ -36,11 +36,11 @@ const materials = [
   },
   {
     icon: <Box size={20} />,
-    title: "BALTIC BIRCH PLYWOOD",
+    title: "PLYWOOD",
     tag: "VOLUMES",
     description:
-      "100% Baltic birch plywood precision 5-axis CNC cut volumes with high-friction textured coating and reinforced T-nut inserts.",
-    specs: ["100% Baltic Birch Plywood", "5-axis CNC precision", "High-friction textured coating"],
+      "High-grade plywood precision 5-axis CNC cut volumes with high-friction textured coating and reinforced T-nut inserts.",
+    specs: ["High-grade Plywood", "5-axis CNC precision", "High-friction textured coating"],
   },
 ];
 
