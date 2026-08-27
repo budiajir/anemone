@@ -34,7 +34,7 @@ export default function Home() {
     {
       id: "volumes",
       title: "VOLUMES",
-      subtitle: "Precision Baltic Birch Plywood & Fiberglass Geometric Volumes",
+      subtitle: "100% Baltic Birch Plywood Precision Geometric Volumes",
       categoryName: "Volumes",
       path: "/shop?category=Volumes",
       bgImage: "/images/cucu_chips.png",
