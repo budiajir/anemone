@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, Trash2, Minus, Plus, ArrowLeft, FileText, X, CheckCircle2 } from 'lucide-react';
 import { useCartStore } from '../store/cartStore';
 import { useOrdersStore } from '../store/ordersStore';
 import { formatPrice } from '../data/products';
-import { generateOrderFormPdfHtml } from '../utils/pdfGenerator';
+import { openWhatsAppChat } from '../utils/whatsapp';
 
 export default function Cart() {
+  const navigate = useNavigate();
   const { items, removeItem, updateQuantity, getTotal, clearCart } = useCartStore();
 
   // Modal State
@@ -37,7 +37,7 @@ export default function Cart() {
     setOrderNo(`ANM-2026-${random}`);
   }, [showCheckoutModal]);
 
-  // Combined 1-Click WhatsApp Checkout + Automatic PDF & Digital Invoice Link
+  // Combined 1-Click WhatsApp Checkout + Digital Invoice Link
   const handleCheckoutViaWhatsApp = (e) => {
     if (e) e.preventDefault();
     if (!name.trim() || !phone.trim() || !address.trim()) {
@@ -68,34 +68,7 @@ export default function Cart() {
       console.warn("Orders store save notice:", err);
     }
 
-    // 2. AUTOMATICALLY GENERATE & TRIGGER PDF ORDER FORM (No manual separate download needed)
-    try {
-      const htmlContent = generateOrderFormPdfHtml({
-        orderNo,
-        date,
-        customer: { fullName: name, phone, address },
-        details: {
-          items: items.map((item) => ({
-            name: item.product?.name || 'Product',
-            quantity: item.quantity || 1,
-            price: item.product?.price || 0,
-            selectedVariants: item.selectedVariants || {},
-          })),
-        },
-        total: getTotal(),
-        status: 'Processing',
-      });
-
-      const printWindow = window.open('', '_blank');
-      if (printWindow) {
-        printWindow.document.write(htmlContent);
-        printWindow.document.close();
-      }
-    } catch (err) {
-      console.warn("PDF Auto-generation note:", err);
-    }
-
-    // 3. FORMAT WHATSAPP ORDER DRAFT MESSAGE WITH DIGITAL INVOICE LINK
+    // 2. FORMAT WHATSAPP ORDER DRAFT MESSAGE WITH DIGITAL INVOICE LINK
     const itemsList = items.map((item, idx) => {
       const variantsText = Object.entries(item.selectedVariants || {})
         .map(([k, v]) => `${k}: ${v}`)
@@ -127,12 +100,8 @@ ${digitalInvoiceUrl}
 
 📄 Dokumen invoice & rincian pesanan resmi dapat diakses dan dicetak melalui tautan di atas. Mohon informasi total keseluruhan dan rekening pembayaran. Terima kasih!`;
 
-    const encodedText = encodeURIComponent(messageText);
-    const businessWhatsAppNumber = "628569044778"; 
-    const whatsappUrl = `https://wa.me/${businessWhatsAppNumber}?text=${encodedText}`;
-    
-    // 4. OPEN WHATSAPP DIRECTLY TO BUSINESS NUMBER
-    window.open(whatsappUrl, '_blank');
+    // 3. RELIABLY OPEN WHATSAPP TO ADMIN NUMBER (Without popup blocker issues)
+    openWhatsAppChat(messageText, "628569044778");
     setShowCheckoutModal(false);
   };
 

@@ -5,7 +5,7 @@ import { ChevronLeft, Truck, CreditCard, Loader2 } from "lucide-react";
 import { useCartStore } from "../store/cartStore";
 import { useOrdersStore } from "../store/ordersStore";
 import { formatPrice } from "../data/products";
-import { generateOrderFormPdfHtml } from "../utils/pdfGenerator";
+import { openWhatsAppChat } from "../utils/whatsapp";
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -76,34 +76,7 @@ export default function Checkout() {
       console.warn("Orders store save notice:", err);
     }
 
-    // 2. Automatically generate & trigger PDF Order Form
-    try {
-      const htmlContent = generateOrderFormPdfHtml({
-        orderNo,
-        date: today,
-        customer: { fullName: form.fullName, phone: form.phone, address: fullAddress },
-        details: {
-          items: items.map((item) => ({
-            name: item.product?.name || 'Product',
-            quantity: item.quantity || 1,
-            price: item.product?.price || 0,
-            selectedVariants: item.selectedVariants || {},
-          })),
-        },
-        total,
-        status: 'Processing',
-      });
-
-      const printWindow = window.open('', '_blank');
-      if (printWindow) {
-        printWindow.document.write(htmlContent);
-        printWindow.document.close();
-      }
-    } catch (err) {
-      console.warn("PDF generation note:", err);
-    }
-
-    // 3. Format WhatsApp Order message with Digital Invoice URL
+    // 2. Format WhatsApp Order message with Digital Invoice URL
     const itemsList = items.map((item, idx) => {
       const variantsText = Object.entries(item.selectedVariants || {})
         .map(([k, v]) => `${k}: ${v}`)
@@ -136,12 +109,8 @@ ${digitalInvoiceUrl}
 
 📄 Dokumen invoice & rincian pesanan resmi dapat diakses dan dicetak melalui tautan di atas. Mohon informasi total keseluruhan beserta rekening pembayaran. Terima kasih!`;
 
-    const encodedText = encodeURIComponent(messageText);
-    const businessWhatsAppNumber = "628569044778";
-    const whatsappUrl = `https://wa.me/${businessWhatsAppNumber}?text=${encodedText}`;
-
-    // 4. Open WhatsApp directly
-    window.open(whatsappUrl, '_blank');
+    // 3. Open WhatsApp directly (without popup blocker issues)
+    openWhatsAppChat(messageText, "628569044778");
 
     clearCart();
     navigate("/order-success");

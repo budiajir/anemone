@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Mail, Phone, MapPin, Clock, Send, CheckCircle2, MessageSquare } from "lucide-react";
+import { openWhatsAppChat } from "../utils/whatsapp";
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -24,8 +25,7 @@ export default function Contact() {
 💬 *PESAN:*
 ${formData.message}`;
 
-    const encodedText = encodeURIComponent(messageText);
-    window.open(`https://wa.me/628569044778?text=${encodedText}`, '_blank');
+    openWhatsAppChat(messageText, "628569044778");
 
     setSubmitted(true);
     setTimeout(() => {

@@ -3,10 +3,11 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { CheckCircle2, ArrowRight, ShoppingBag, FileText, Send } from "lucide-react";
 import { generateOrderFormPdfHtml } from "../utils/pdfGenerator";
+import { openWhatsAppChat } from "../utils/whatsapp";
 
 export default function OrderSuccess() {
   const mockOrderId = React.useMemo(() => {
-    return `ANM-${Math.floor(100000 + Math.random() * 900000)}`;
+    return `ANM-2026-${Math.floor(1000 + Math.random() * 9000)}`;
   }, []);
 
   const dateStr = React.useMemo(() => {
@@ -37,10 +38,8 @@ export default function OrderSuccess() {
 
   // Send WhatsApp Confirmation
   const handleSendWhatsApp = () => {
-    const messageText = `Halo Anemone, pesanan saya telah berhasil dibuat!\n\n📝 *ORDER NO:* ${mockOrderId}\n📅 *Tanggal:* ${dateStr}\n status: *Processing*\n\nMohon info proses pengiriman pesanan saya. Terima kasih!`;
-    const encodedText = encodeURIComponent(messageText);
-    const businessWhatsAppNumber = "628569044778";
-    window.open(`https://wa.me/${businessWhatsAppNumber}?text=${encodedText}`, '_blank');
+    const messageText = `Halo Anemone, pesanan saya telah berhasil dibuat!\n\n📝 *ORDER NO:* ${mockOrderId}\n📅 *Tanggal:* ${dateStr}\n status: *Processing*\n🔗 *Invoice:* https://anemonegrip.com/invoice/${mockOrderId}\n\nMohon info proses pengiriman pesanan saya. Terima kasih!`;
+    openWhatsAppChat(messageText, "628569044778");
   };
 
   return (
