@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, Trash2, Minus, Plus, ArrowLeft, FileText, X, CheckCircle2 } from 'lucide-react';
 import { useCartStore } from '../store/cartStore';
+import { useOrdersStore } from '../store/ordersStore';
 import { formatPrice } from '../data/products';
 import { generateOrderFormPdfHtml } from '../utils/pdfGenerator';
 
@@ -21,7 +22,7 @@ export default function Cart() {
   const [orderNo, setOrderNo] = useState("");
   const [date, setDate] = useState("");
 
-  // Initialize date & order no automatically on mount or modal open
+  // Initialize date & order no automatically on mount or modal open (Format: ANM-2026-XXXX)
   useEffect(() => {
     const months = [
       "Januari", "Februari", "Maret", "April", "Mei", "Juni",
@@ -31,15 +32,12 @@ export default function Cart() {
     const formattedDate = `${today.getDate()} ${months[today.getMonth()]} ${today.getFullYear()}`;
     setDate(formattedDate);
 
-    // Format: ANM-YYYYMMDD-RANDOM4
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
+    // Format: ANM-2026-XXXX (4 random digits)
     const random = Math.floor(1000 + Math.random() * 9000);
-    setOrderNo(`ANM-${yyyy}${mm}${dd}-${random}`);
+    setOrderNo(`ANM-2026-${random}`);
   }, [showCheckoutModal]);
 
-  // Combined 1-Click WhatsApp Checkout + Automatic PDF Order Form Generation
+  // Combined 1-Click WhatsApp Checkout + Automatic PDF & Digital Invoice Link
   const handleCheckoutViaWhatsApp = (e) => {
     if (e) e.preventDefault();
     if (!name.trim() || !phone.trim() || !address.trim()) {
@@ -48,8 +46,29 @@ export default function Cart() {
     }
 
     const formattedTotal = formatPrice(getTotal());
+    const digitalInvoiceUrl = `https://anemonegrip.com/invoice/${orderNo}`;
     
-    // 1. AUTOMATICALLY GENERATE & TRIGGER PDF ORDER FORM (No manual separate download needed)
+    // 1. SAVE TO ORDERS STORE (Persisted for Digital Invoice / Admin)
+    try {
+      useOrdersStore.getState().addOrder({
+        orderNo,
+        date,
+        customer: { fullName: name, phone, address },
+        items: items.map((item) => ({
+          name: item.product?.name || 'Product',
+          quantity: item.quantity || 1,
+          price: item.product?.price || 0,
+          selectedVariants: item.selectedVariants || {},
+          product: item.product,
+        })),
+        total: getTotal(),
+        status: 'Processing',
+      });
+    } catch (err) {
+      console.warn("Orders store save notice:", err);
+    }
+
+    // 2. AUTOMATICALLY GENERATE & TRIGGER PDF ORDER FORM (No manual separate download needed)
     try {
       const htmlContent = generateOrderFormPdfHtml({
         orderNo,
@@ -76,7 +95,7 @@ export default function Cart() {
       console.warn("PDF Auto-generation note:", err);
     }
 
-    // 2. FORMAT WHATSAPP ORDER DRAFT MESSAGE
+    // 3. FORMAT WHATSAPP ORDER DRAFT MESSAGE WITH DIGITAL INVOICE LINK
     const itemsList = items.map((item, idx) => {
       const variantsText = Object.entries(item.selectedVariants || {})
         .map(([k, v]) => `${k}: ${v}`)
@@ -103,13 +122,16 @@ ${itemsList}
 💵 *TOTAL HARGA PRODUK:* *${formattedTotal}*
 🚚 *Ongkos Kirim:* _(Diinfokan oleh Admin)_
 
-📄 *Catatan:* Dokumen resmi PDF Order Form telah otomatis dibuat. Mohon informasi total keseluruhan dan rekening pembayaran. Terima kasih!`;
+🔗 *DIGITAL INVOICE LINK:*
+${digitalInvoiceUrl}
+
+📄 Dokumen invoice & rincian pesanan resmi dapat diakses dan dicetak melalui tautan di atas. Mohon informasi total keseluruhan dan rekening pembayaran. Terima kasih!`;
 
     const encodedText = encodeURIComponent(messageText);
     const businessWhatsAppNumber = "628569044778"; 
     const whatsappUrl = `https://wa.me/${businessWhatsAppNumber}?text=${encodedText}`;
     
-    // 3. OPEN WHATSAPP DIRECTLY TO BUSINESS NUMBER
+    // 4. OPEN WHATSAPP DIRECTLY TO BUSINESS NUMBER
     window.open(whatsappUrl, '_blank');
     setShowCheckoutModal(false);
   };

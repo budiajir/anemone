@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ChevronLeft, Truck, CreditCard, Loader2 } from "lucide-react";
 import { useCartStore } from "../store/cartStore";
+import { useOrdersStore } from "../store/ordersStore";
 import { formatPrice } from "../data/products";
 import { generateOrderFormPdfHtml } from "../utils/pdfGenerator";
 
@@ -44,11 +45,38 @@ export default function Checkout() {
 
     setSubmitting(true);
 
-    const orderNo = `ANM-${Math.floor(100000 + Math.random() * 900000)}`;
+    const random4 = Math.floor(1000 + Math.random() * 9000);
+    const orderNo = `ANM-2026-${random4}`;
     const fullAddress = `${form.address}, ${form.city} ${form.postalCode}`;
     const today = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+    const digitalInvoiceUrl = `https://anemonegrip.com/invoice/${orderNo}`;
 
-    // 1. Automatically generate & trigger PDF Order Form
+    // 1. Save to Orders Store for Digital Invoice and Admin
+    try {
+      useOrdersStore.getState().addOrder({
+        orderNo,
+        date: today,
+        customer: {
+          fullName: form.fullName,
+          phone: form.phone,
+          email: form.email,
+          address: fullAddress,
+        },
+        items: items.map((item) => ({
+          name: item.product?.name || 'Product',
+          quantity: item.quantity || 1,
+          price: item.product?.price || 0,
+          selectedVariants: item.selectedVariants || {},
+          product: item.product,
+        })),
+        total,
+        status: 'Processing',
+      });
+    } catch (err) {
+      console.warn("Orders store save notice:", err);
+    }
+
+    // 2. Automatically generate & trigger PDF Order Form
     try {
       const htmlContent = generateOrderFormPdfHtml({
         orderNo,
@@ -75,7 +103,7 @@ export default function Checkout() {
       console.warn("PDF generation note:", err);
     }
 
-    // 2. Format WhatsApp Order message
+    // 3. Format WhatsApp Order message with Digital Invoice URL
     const itemsList = items.map((item, idx) => {
       const variantsText = Object.entries(item.selectedVariants || {})
         .map(([k, v]) => `${k}: ${v}`)
@@ -103,13 +131,16 @@ ${itemsList}
 💵 *TOTAL HARGA PRODUK:* *${formatPrice(total)}*
 🚚 *Ongkos Kirim:* _(Diinfokan oleh Admin)_
 
-📄 *Catatan:* Dokumen resmi PDF Order Form telah otomatis di-generate. Mohon info total keseluruhan beserta rekening pembayaran. Terima kasih!`;
+🔗 *DIGITAL INVOICE LINK:*
+${digitalInvoiceUrl}
+
+📄 Dokumen invoice & rincian pesanan resmi dapat diakses dan dicetak melalui tautan di atas. Mohon informasi total keseluruhan beserta rekening pembayaran. Terima kasih!`;
 
     const encodedText = encodeURIComponent(messageText);
     const businessWhatsAppNumber = "628569044778";
     const whatsappUrl = `https://wa.me/${businessWhatsAppNumber}?text=${encodedText}`;
 
-    // 3. Open WhatsApp directly
+    // 4. Open WhatsApp directly
     window.open(whatsappUrl, '_blank');
 
     clearCart();

@@ -11,6 +11,7 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
+import Invoice from "./pages/Invoice";
 
 // Admin Panel Components
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -60,6 +61,9 @@ export default function App() {
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/order-success" element={<OrderSuccess />} />
         </Route>
+
+        {/* Digital Invoice Link (Standalone printable & shareable route) */}
+        <Route path="/invoice/:orderId" element={<Invoice />} />
 
         {/* Admin Login Route (Public within Admin domain) */}
         <Route path="/admin/login" element={<AdminLogin />} />
