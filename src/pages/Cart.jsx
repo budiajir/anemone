@@ -6,6 +6,7 @@ import { useCartStore } from '../store/cartStore';
 import { useOrdersStore } from '../store/ordersStore';
 import { formatPrice } from '../data/products';
 import { openWhatsAppChat } from '../utils/whatsapp';
+import { encodeOrderData } from '../utils/orderEncoder';
 
 export default function Cart() {
   const navigate = useNavigate();
@@ -38,7 +39,7 @@ export default function Cart() {
     setOrderNo(`ANM-2026-${random}`);
   }, [showCheckoutModal]);
 
-  // Combined 1-Click WhatsApp Checkout + Digital Invoice Link
+  // Combined 1-Click WhatsApp Checkout + Digital Order Form Link
   const handleCheckoutViaWhatsApp = (e) => {
     if (e) e.preventDefault();
     if (!name.trim() || !phone.trim() || !address.trim()) {
@@ -47,29 +48,34 @@ export default function Cart() {
     }
 
     const formattedTotal = formatPrice(getTotal());
-    const digitalInvoiceUrl = `https://anemonegrip.com/invoice/${orderNo}`;
     
-    // 1. SAVE TO ORDERS STORE (Persisted for Digital Invoice / Admin)
+    const orderPayload = {
+      orderNo,
+      date,
+      customer: { fullName: name, phone, address },
+      items: items.map((item) => ({
+        name: item.product?.name || 'Product',
+        quantity: item.quantity || 1,
+        price: item.product?.price || 0,
+        selectedVariants: item.selectedVariants || {},
+        product: item.product,
+      })),
+      total: getTotal(),
+      status: 'PROCESSING',
+    };
+
+    // 1. SAVE TO ORDERS STORE (Persisted locally)
     try {
-      useOrdersStore.getState().addOrder({
-        orderNo,
-        date,
-        customer: { fullName: name, phone, address },
-        items: items.map((item) => ({
-          name: item.product?.name || 'Product',
-          quantity: item.quantity || 1,
-          price: item.product?.price || 0,
-          selectedVariants: item.selectedVariants || {},
-          product: item.product,
-        })),
-        total: getTotal(),
-        status: 'Processing',
-      });
+      useOrdersStore.getState().addOrder(orderPayload);
     } catch (err) {
       console.warn("Orders store save notice:", err);
     }
 
-    // 2. FORMAT WHATSAPP ORDER DRAFT MESSAGE WITH DIGITAL INVOICE LINK
+    // 2. ENCODE FOR CROSS-DEVICE DIGITAL ORDER FORM
+    const encodedStr = encodeOrderData(orderPayload);
+    const digitalInvoiceUrl = `https://anemonegrip.com/invoice/${orderNo}?d=${encodedStr}`;
+
+    // 3. FORMAT WHATSAPP ORDER DRAFT MESSAGE WITH DIGITAL ORDER FORM LINK
     const itemsList = items.map((item, idx) => {
       const variantsText = Object.entries(item.selectedVariants || {})
         .map(([k, v]) => `${k}: ${v}`)
@@ -96,12 +102,12 @@ ${itemsList}
 💵 *TOTAL HARGA PRODUK:* *${formattedTotal}*
 🚚 *Ongkos Kirim:* _(Diinfokan oleh Admin)_
 
-🔗 *DIGITAL INVOICE LINK:*
+🔗 *ORDER FORM / INVOICE LINK:*
 ${digitalInvoiceUrl}
 
-📄 Dokumen invoice & rincian pesanan resmi dapat diakses dan dicetak melalui tautan di atas. Mohon informasi total keseluruhan dan rekening pembayaran. Terima kasih!`;
+📄 Dokumen resmi Order Form dapat dilihat dan dicetak melalui tautan di atas. Mohon informasi total keseluruhan dan rekening pembayaran. Terima kasih!`;
 
-    // 3. RELIABLY OPEN WHATSAPP TO ADMIN NUMBER (Without popup blocker issues)
+    // 4. RELIABLY OPEN WHATSAPP TO ADMIN NUMBER
     openWhatsAppChat(messageText, "628569044778");
     setShowCheckoutModal(false);
   };
