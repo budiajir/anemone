@@ -1,12 +1,12 @@
 export const ADMIN_WHATSAPP_NUMBER = "628569044778";
 
 /**
- * Returns universal WhatsApp URL that works on mobile app and WhatsApp web
+ * Returns universal WhatsApp URL (wa.me) that works reliably across mobile app and WhatsApp web
  */
 export function getWhatsAppUrl(text = "", phone = ADMIN_WHATSAPP_NUMBER) {
   const cleanPhone = String(phone).replace(/\D/g, "");
   const encodedText = encodeURIComponent(text);
-  return `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodedText}`;
+  return `https://wa.me/${cleanPhone}?text=${encodedText}`;
 }
 
 /**

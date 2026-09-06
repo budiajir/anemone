@@ -110,6 +110,8 @@ ${digitalInvoiceUrl}
     // 4. RELIABLY OPEN WHATSAPP TO ADMIN NUMBER
     openWhatsAppChat(messageText, "628569044778");
     setShowCheckoutModal(false);
+    clearCart();
+    navigate(`/invoice/${orderNo}?d=${encodedStr}`);
   };
 
   if (items.length === 0) {
