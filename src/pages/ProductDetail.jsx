@@ -3,25 +3,26 @@ import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Maximize2, ShoppingCart, ArrowLeft, Loader2, Minus, Plus, X, Check } from 'lucide-react';
 import { useCartStore } from '../store/cartStore';
-import { formatPrice } from '../data/products';
+import { formatPrice, defaultHoldColors } from '../data/products';
 import ProductCard from '../components/ProductCard';
 import { getProductBySlug, getProducts } from '../services/api';
 
 const colorMap = {
-  green: "#10b981",
-  pink: "#ec4899",
-  blue: "#3b82f6",
+  red: "#ef4444",
+  blue: "#2563eb",
   yellow: "#eab308",
-  black: "#171717",
+  green: "#10b981",
   orange: "#f97316",
   purple: "#a855f7",
-  red: "#ef4444",
-  white: "#f5f5f5",
-  grey: "#737373",
-  gray: "#737373",
+  pink: "#ec4899",
+  black: "#171717",
+  white: "#f8fafc",
+  grey: "#6b7280",
+  gray: "#6b7280",
+  cyan: "#06b6d4",
+  tosca: "#0d9488",
+  turquoise: "#06b6d4",
 };
-
-const defaultHoldColors = ["Pink", "Green", "Blue", "Yellow", "Black"];
 
 export default function ProductDetail() {
   const { slug } = useParams();

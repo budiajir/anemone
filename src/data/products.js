@@ -1,4 +1,16 @@
-export const defaultHoldColors = ["Pink", "Green", "Blue", "Yellow", "Black"];
+export const defaultHoldColors = [
+  "Red",
+  "Blue",
+  "Yellow",
+  "Green",
+  "Orange",
+  "Purple",
+  "Pink",
+  "Black",
+  "White",
+  "Grey",
+  "Cyan",
+];
 
 export const products = [
   // ═══════════════════════════════════════
@@ -15,7 +27,7 @@ export const products = [
     shortDescription: "19 Pcs | Easy - Medium | Jug & Crimp",
     images: ["/images/motela.png"],
     variants: [
-      { name: "Color", options: ["Green", "Pink", "Blue", "Yellow", "Black"] },
+      { name: "Color", options: defaultHoldColors },
     ],
     specs: {
       quantity: "19 Pcs",
@@ -41,7 +53,7 @@ export const products = [
     shortDescription: "19 Pcs | Medium - Hard | Mini Jug & Crimp",
     images: ["/images/motela.png"],
     variants: [
-      { name: "Color", options: ["Pink", "Green", "Blue", "Yellow", "Black"] },
+      { name: "Color", options: defaultHoldColors },
     ],
     specs: {
       quantity: "19 Pcs",
@@ -67,7 +79,7 @@ export const products = [
     shortDescription: "9 Pcs | Easy - Medium | Mini Jug",
     images: ["/images/argus.png"],
     variants: [
-      { name: "Color", options: ["Blue", "Green", "Pink", "Yellow", "Black"] },
+      { name: "Color", options: defaultHoldColors },
     ],
     specs: {
       quantity: "9 Pcs",
@@ -93,7 +105,7 @@ export const products = [
     shortDescription: "13 Pcs | Medium - Hard | Mini Jug & Crimp",
     images: ["/images/eclipse.png"],
     variants: [
-      { name: "Color", options: ["Pink", "Green", "Blue", "Yellow", "Black"] },
+      { name: "Color", options: defaultHoldColors },
     ],
     specs: {
       quantity: "13 Pcs",
@@ -119,7 +131,7 @@ export const products = [
     shortDescription: "20 Pcs | Hard | Crimp",
     images: ["/images/cucu_chips.png"],
     variants: [
-      { name: "Color", options: ["Blue", "Green", "Pink", "Yellow", "Black"] },
+      { name: "Color", options: defaultHoldColors },
     ],
     specs: {
       quantity: "20 Pcs",
