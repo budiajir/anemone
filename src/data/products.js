@@ -1,3 +1,5 @@
+export const defaultHoldColors = ["Pink", "Green", "Blue", "Yellow", "Black"];
+
 export const products = [
   // ═══════════════════════════════════════
   // HOLDS
@@ -13,7 +15,7 @@ export const products = [
     shortDescription: "19 Pcs | Easy - Medium | Jug & Crimp",
     images: ["/images/motela.png"],
     variants: [
-      { name: "Color", options: ["Green", "Blue", "Pink"] },
+      { name: "Color", options: ["Green", "Pink", "Blue", "Yellow", "Black"] },
     ],
     specs: {
       quantity: "19 Pcs",
@@ -39,7 +41,7 @@ export const products = [
     shortDescription: "19 Pcs | Medium - Hard | Mini Jug & Crimp",
     images: ["/images/motela.png"],
     variants: [
-      { name: "Color", options: ["Pink", "Green"] },
+      { name: "Color", options: ["Pink", "Green", "Blue", "Yellow", "Black"] },
     ],
     specs: {
       quantity: "19 Pcs",
@@ -65,7 +67,7 @@ export const products = [
     shortDescription: "9 Pcs | Easy - Medium | Mini Jug",
     images: ["/images/argus.png"],
     variants: [
-      { name: "Color", options: ["Blue", "Green"] },
+      { name: "Color", options: ["Blue", "Green", "Pink", "Yellow", "Black"] },
     ],
     specs: {
       quantity: "9 Pcs",
@@ -91,7 +93,7 @@ export const products = [
     shortDescription: "13 Pcs | Medium - Hard | Mini Jug & Crimp",
     images: ["/images/eclipse.png"],
     variants: [
-      { name: "Color", options: ["Pink", "Green"] },
+      { name: "Color", options: ["Pink", "Green", "Blue", "Yellow", "Black"] },
     ],
     specs: {
       quantity: "13 Pcs",
@@ -117,7 +119,7 @@ export const products = [
     shortDescription: "20 Pcs | Hard | Crimp",
     images: ["/images/cucu_chips.png"],
     variants: [
-      { name: "Color", options: ["Blue", "Green"] },
+      { name: "Color", options: ["Blue", "Green", "Pink", "Yellow", "Black"] },
     ],
     specs: {
       quantity: "20 Pcs",
@@ -157,4 +159,3 @@ export function getFeaturedProducts() {
 export function getProductBySlug(slug) {
   return products.find((p) => p.slug === slug);
 }
-

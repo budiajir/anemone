@@ -1,11 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Maximize2, ShoppingCart, ArrowLeft, Loader2, Minus, Plus, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Maximize2, ShoppingCart, ArrowLeft, Loader2, Minus, Plus, X, Check } from 'lucide-react';
 import { useCartStore } from '../store/cartStore';
 import { formatPrice } from '../data/products';
 import ProductCard from '../components/ProductCard';
 import { getProductBySlug, getProducts } from '../services/api';
+
+const colorMap = {
+  green: "#10b981",
+  pink: "#ec4899",
+  blue: "#3b82f6",
+  yellow: "#eab308",
+  black: "#171717",
+  orange: "#f97316",
+  purple: "#a855f7",
+  red: "#ef4444",
+  white: "#f5f5f5",
+  grey: "#737373",
+  gray: "#737373",
+};
+
+const defaultHoldColors = ["Pink", "Green", "Blue", "Yellow", "Black"];
 
 export default function ProductDetail() {
   const { slug } = useParams();
@@ -50,7 +66,14 @@ export default function ProductDetail() {
           }
           setProduct(data);
 
-          const defaultVariants = (data.variants || []).reduce(
+          const variantsList =
+            data.variants && data.variants.length > 0
+              ? data.variants
+              : data.category === 'Holds'
+              ? [{ name: 'Color', options: defaultHoldColors }]
+              : [];
+
+          const defaultVariants = variantsList.reduce(
             (acc, variant) => ({ ...acc, [variant.name]: variant.options?.[0] || '' }),
             {}
           );
@@ -86,6 +109,17 @@ export default function ProductDetail() {
       isMounted = false;
     };
   }, [slug]);
+
+  const effectiveVariants = useMemo(() => {
+    if (!product) return [];
+    if (product.variants && product.variants.length > 0) {
+      return product.variants;
+    }
+    if (product.category === 'Holds') {
+      return [{ name: 'Color', options: defaultHoldColors }];
+    }
+    return [];
+  }, [product]);
 
   if (loading) {
     return (
@@ -153,7 +187,7 @@ export default function ProductDetail() {
           </Link>
         </div>
 
-        {/* BLOKHOLDS MAIN IMAGE CAROUSEL VIEWER (Screenshot 2 Style) */}
+        {/* MAIN IMAGE CAROUSEL VIEWER */}
         <div className="space-y-6">
           <div className="relative aspect-[4/3] sm:aspect-[16/10] w-full max-w-5xl mx-auto rounded-lg overflow-hidden bg-[#121212] border border-white/10 group shadow-2xl flex items-center justify-center p-4">
             <AnimatePresence mode="wait">
@@ -289,7 +323,7 @@ export default function ProductDetail() {
           )}
         </AnimatePresence>
 
-        {/* PRODUCT DETAILS & PURCHASE PANEL (Blokholds Bottom Layout) */}
+        {/* PRODUCT DETAILS & PURCHASE PANEL */}
         <div className="max-w-4xl mx-auto space-y-8 border-t border-white/10 pt-10">
           
           {/* Header & Title */}
@@ -325,16 +359,22 @@ export default function ProductDetail() {
                     <span className="text-white font-bold">{product.material}</span>
                   </div>
                 )}
-                {product.specs?.weight && (
+                {product.specs?.type && (
                   <div className="flex justify-between py-1 border-b border-white/[0.06]">
-                    <span className="text-neutral-500 uppercase font-semibold">Weight:</span>
-                    <span className="text-neutral-300 font-medium">{product.specs.weight}</span>
+                    <span className="text-neutral-500 uppercase font-semibold">Hold Type:</span>
+                    <span className="text-neutral-300 font-medium">{product.specs.type}</span>
                   </div>
                 )}
-                {product.specs?.dimensions && (
+                {product.specs?.difficulty && (
                   <div className="flex justify-between py-1 border-b border-white/[0.06]">
-                    <span className="text-neutral-500 uppercase font-semibold">Dimensions:</span>
-                    <span className="text-neutral-300 font-medium">{product.specs.dimensions}</span>
+                    <span className="text-neutral-500 uppercase font-semibold">Difficulty:</span>
+                    <span className="text-neutral-300 font-medium">{product.specs.difficulty}</span>
+                  </div>
+                )}
+                {product.specs?.boltType && (
+                  <div className="flex justify-between py-1 border-b border-white/[0.06]">
+                    <span className="text-neutral-500 uppercase font-semibold">Bolt Insert:</span>
+                    <span className="text-neutral-300 font-medium">{product.specs.boltType}</span>
                   </div>
                 )}
               </div>
@@ -348,6 +388,61 @@ export default function ProductDetail() {
                   {formatPrice(product.price)}
                 </div>
               </div>
+
+              {/* COLOR / VARIANT SELECTOR */}
+              {effectiveVariants.length > 0 && (
+                <div className="space-y-4 pt-4 border-t border-white/10">
+                  {effectiveVariants.map((variant) => {
+                    const currentSelected = selectedVariants[variant.name] || variant.options?.[0] || '';
+                    return (
+                      <div key={variant.name} className="space-y-2.5">
+                        <div className="flex items-center justify-between text-[11px] uppercase tracking-wider">
+                          <span className="text-neutral-400 font-bold">PILIH {variant.name}:</span>
+                          <span className="text-white font-bold bg-white/10 px-2.5 py-0.5 rounded font-mono text-[10px]">
+                            {currentSelected}
+                          </span>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2">
+                          {variant.options?.map((opt) => {
+                            const isSelected = currentSelected === opt;
+                            const lower = opt.toLowerCase();
+                            const dotColor = colorMap[lower] || null;
+
+                            return (
+                              <button
+                                key={opt}
+                                type="button"
+                                onClick={() =>
+                                  setSelectedVariants((prev) => ({
+                                    ...prev,
+                                    [variant.name]: opt,
+                                  }))
+                                }
+                                className={`px-3 py-2 rounded text-xs font-bold uppercase tracking-wider flex items-center gap-2 border transition-all cursor-pointer ${
+                                  isSelected
+                                    ? 'bg-white text-black border-white shadow-md scale-105'
+                                    : 'bg-black/60 text-neutral-300 border-white/15 hover:border-white/40 hover:text-white'
+                                }`}
+                              >
+                                {dotColor && (
+                                  <span
+                                    className={`w-3.5 h-3.5 rounded-full shrink-0 border ${
+                                      isSelected ? 'border-black/40' : 'border-white/30'
+                                    }`}
+                                    style={{ backgroundColor: dotColor }}
+                                  />
+                                )}
+                                <span>{opt}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
 
               {/* Quantity Selector */}
               <div className="space-y-2">
