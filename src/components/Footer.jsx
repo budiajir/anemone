@@ -15,9 +15,9 @@ const footerLinks = {
     { name: "Shop", path: "/shop" },
   ],
   Support: [
-    { name: "FAQ", path: "/" },
-    { name: "Shipping", path: "/" },
-    { name: "Returns", path: "/" },
+    { name: "FAQ", path: "/contact" },
+    { name: "Shipping", path: "/contact" },
+    { name: "Returns", path: "/contact" },
   ],
 };
 
@@ -62,10 +62,10 @@ export default function Footer() {
       <div className="md:hidden bg-[#1a1a1a]">
         <div className="max-w-lg mx-auto px-8 pt-14 pb-10">
 
-          {/* Two-Column Link Grid */}
-          <div className="grid grid-cols-2 gap-x-12 gap-y-8">
-            {Object.entries(footerLinks).slice(0, 2).map(([title, links]) => (
-              <div key={title} className="space-y-5">
+          {/* Two-Column Link Grid (2x2 Balanced: Shop, Company, Support with FAQ, Inquiries) */}
+          <div className="grid grid-cols-2 gap-x-8 gap-y-8">
+            {Object.entries(footerLinks).map(([title, links]) => (
+              <div key={title} className="space-y-4">
                 <h4 className="text-white text-base font-bold tracking-wide">
                   {title}
                 </h4>
@@ -83,6 +83,36 @@ export default function Footer() {
                 </ul>
               </div>
             ))}
+
+            {/* Inquiries / Direct Contact Column */}
+            <div className="space-y-4">
+              <h4 className="text-white text-base font-bold tracking-wide">
+                Inquiries
+              </h4>
+              <ul className="space-y-3 text-sm text-neutral-400">
+                <li>
+                  <a
+                    href="https://wa.me/628569044778"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-white transition-colors"
+                  >
+                    +62 856 9044 778
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="mailto:anemone@anemonegrip.com"
+                    className="hover:text-white transition-colors"
+                  >
+                    anemone@anemonegrip.com
+                  </a>
+                </li>
+                <li className="text-neutral-500 text-xs">
+                  Bandung, Indonesia
+                </li>
+              </ul>
+            </div>
           </div>
 
           {/* Social Icons Row */}
