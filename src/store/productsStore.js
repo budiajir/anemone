@@ -64,16 +64,24 @@ export const useProductsStore = create(
     }),
     {
       name: 'anemone-products-storage',
-      version: 3,
+      version: 4,
       migrate: (persistedState, version) => {
         if (!persistedState || !persistedState.products) {
           return { products: initialProducts };
         }
-        // Normalize all products: ensure Holds, Macros, Volumes have specs and color variants
+        // Normalize all products: ensure Holds, Macros, Volumes have specs, color variants, and correct assets
         const cleanProducts = persistedState.products.map((p) => {
           const cat = (p.category || '').toLowerCase();
           const isHoldLike = ['holds', 'macros', 'volumes'].includes(cat);
           let updated = { ...p };
+
+          // Fix Mega Eclipse image if pointing to motela or missing
+          if (p.slug === 'mega-eclipse') {
+            if (!updated.images || updated.images.length === 0 || updated.images[0] === '/images/motela.png') {
+              updated.images = ['/images/mega-eclipse.png'];
+              updated.image = '/images/mega-eclipse.png';
+            }
+          }
 
           // Automatically enable color variants for holds, macros, and volumes if not defined
           if (isHoldLike && (!updated.variants || updated.variants.length === 0)) {

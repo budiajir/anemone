@@ -158,7 +158,7 @@ export const products = [
     price: 2700000,
     description: "Fiberglass pinch climbing macros set. Medium - Hard difficulty level.",
     shortDescription: "7 Pcs | 40cm - 55cm | Pinch",
-    images: ["/images/motela.png"],
+    images: ["/images/mega-eclipse.png"],
     variants: [
       { name: "Color", options: defaultHoldColors },
     ],
