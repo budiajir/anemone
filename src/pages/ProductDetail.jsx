@@ -24,6 +24,59 @@ const colorMap = {
   turquoise: "#06b6d4",
 };
 
+function resolveProductSpecs(product) {
+  if (!product) return {};
+  const specs = product.specs || {};
+  const desc = (product.shortDescription || product.description || '').toLowerCase();
+  const cat = (product.category || '').toLowerCase();
+  const isHoldLike = cat === 'holds' || cat === 'macros' || cat === 'volumes';
+
+  // Quantity
+  let quantity = specs.quantity;
+  if (!quantity) {
+    const qtyMatch = desc.match(/(\d+)\s*(pcs|buah|set)/i);
+    quantity = qtyMatch ? `${qtyMatch[1]} Pcs` : '1 Set';
+  }
+
+  // Material
+  const material = product.material || specs.material || (cat === 'macros' ? 'Fiberglass' : 'PU');
+
+  // Hold Type
+  let type = specs.type;
+  if (!type && isHoldLike) {
+    if (desc.includes('pinch')) type = 'Pinch';
+    else if (desc.includes('crimp')) type = 'Crimp';
+    else if (desc.includes('jug')) type = 'Mini Jug & Crimp';
+    else if (desc.includes('sloper')) type = 'Sloper';
+    else if (desc.includes('pocket')) type = 'Pocket';
+    else type = cat === 'macros' ? 'Pinch' : 'Mini Jug & Crimp';
+  }
+
+  // Difficulty
+  let difficulty = specs.difficulty;
+  if (!difficulty && isHoldLike) {
+    if (desc.includes('easy - medium') || desc.includes('easy-medium')) difficulty = 'Easy - Medium';
+    else if (desc.includes('medium - hard') || desc.includes('medium-hard')) difficulty = 'Medium - Hard';
+    else if (desc.includes('easy')) difficulty = 'Easy';
+    else if (desc.includes('hard')) difficulty = 'Hard';
+    else difficulty = 'Medium - Hard';
+  }
+
+  // Bolt Insert
+  let boltType = specs.boltType;
+  if (!boltType && isHoldLike) {
+    boltType = 'M10 Allen';
+  }
+
+  return {
+    quantity,
+    material,
+    type,
+    difficulty,
+    boltType,
+  };
+}
+
 export default function ProductDetail() {
   const { slug } = useParams();
   const addItem = useCartStore((state) => state.addItem);
@@ -67,10 +120,13 @@ export default function ProductDetail() {
           }
           setProduct(data);
 
+          const cat = (data.category || '').toLowerCase();
+          const isHoldLike = cat === 'holds' || cat === 'macros' || cat === 'volumes';
+
           const variantsList =
             data.variants && data.variants.length > 0
               ? data.variants
-              : data.category === 'Holds'
+              : isHoldLike
               ? [{ name: 'Color', options: defaultHoldColors }]
               : [];
 
@@ -116,11 +172,14 @@ export default function ProductDetail() {
     if (product.variants && product.variants.length > 0) {
       return product.variants;
     }
-    if (product.category === 'Holds') {
+    const cat = (product.category || '').toLowerCase();
+    if (cat === 'holds' || cat === 'macros' || cat === 'volumes') {
       return [{ name: 'Color', options: defaultHoldColors }];
     }
     return [];
   }, [product]);
+
+  const resolvedSpecs = useMemo(() => resolveProductSpecs(product), [product]);
 
   if (loading) {
     return (
@@ -352,30 +411,30 @@ export default function ProductDetail() {
               <div className="space-y-2.5 text-xs">
                 <div className="flex justify-between py-1 border-b border-white/[0.06]">
                   <span className="text-neutral-500 uppercase font-semibold">Quantity / Set:</span>
-                  <span className="text-white font-bold">{product.specs?.quantity || '1 Set'}</span>
+                  <span className="text-white font-bold">{resolvedSpecs.quantity || '1 Set'}</span>
                 </div>
-                {product.material && (
+                {resolvedSpecs.material && (
                   <div className="flex justify-between py-1 border-b border-white/[0.06]">
                     <span className="text-neutral-500 uppercase font-semibold">Material:</span>
-                    <span className="text-white font-bold">{product.material}</span>
+                    <span className="text-white font-bold">{resolvedSpecs.material}</span>
                   </div>
                 )}
-                {product.specs?.type && (
+                {resolvedSpecs.type && (
                   <div className="flex justify-between py-1 border-b border-white/[0.06]">
                     <span className="text-neutral-500 uppercase font-semibold">Hold Type:</span>
-                    <span className="text-neutral-300 font-medium">{product.specs.type}</span>
+                    <span className="text-neutral-300 font-medium">{resolvedSpecs.type}</span>
                   </div>
                 )}
-                {product.specs?.difficulty && (
+                {resolvedSpecs.difficulty && (
                   <div className="flex justify-between py-1 border-b border-white/[0.06]">
                     <span className="text-neutral-500 uppercase font-semibold">Difficulty:</span>
-                    <span className="text-neutral-300 font-medium">{product.specs.difficulty}</span>
+                    <span className="text-neutral-300 font-medium">{resolvedSpecs.difficulty}</span>
                   </div>
                 )}
-                {product.specs?.boltType && (
+                {resolvedSpecs.boltType && (
                   <div className="flex justify-between py-1 border-b border-white/[0.06]">
                     <span className="text-neutral-500 uppercase font-semibold">Bolt Insert:</span>
-                    <span className="text-neutral-300 font-medium">{product.specs.boltType}</span>
+                    <span className="text-neutral-300 font-medium">{resolvedSpecs.boltType}</span>
                   </div>
                 )}
               </div>

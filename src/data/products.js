@@ -145,6 +145,35 @@ export const products = [
     isNew: true,
     isFeatured: true,
     createdAt: "2026-02-01",
+  },
+  // ═══════════════════════════════════════
+  // MACROS
+  // ═══════════════════════════════════════
+  {
+    id: 6,
+    name: "Mega Eclipse",
+    slug: "mega-eclipse",
+    category: "Macros",
+    material: "Fiberglass",
+    price: 2700000,
+    description: "Fiberglass pinch climbing macros set. Medium - Hard difficulty level.",
+    shortDescription: "7 Pcs | 40cm - 55cm | Pinch",
+    images: ["/images/motela.png"],
+    variants: [
+      { name: "Color", options: defaultHoldColors },
+    ],
+    specs: {
+      quantity: "7 Pcs",
+      difficulty: "Medium - Hard",
+      type: "Pinch",
+      material: "Fiberglass",
+      boltType: "M10 Allen",
+    },
+    rating: 5.0,
+    reviewCount: 16,
+    isNew: true,
+    isFeatured: true,
+    createdAt: "2026-02-15",
   }
 ];
 

@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { Plus, Edit2, Trash2, X, Check, Upload, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { formatPrice } from '../../data/products';
+import { formatPrice, defaultHoldColors } from '../../data/products';
 import { useProductsStore } from '../../store/productsStore';
 
 export default function AdminProducts() {
@@ -18,13 +18,18 @@ export default function AdminProducts() {
   const [editingProduct, setEditingProduct] = useState(null);
   const fileInputRef = useRef(null);
 
-  // Form State with Multiple Images Support
+  // Form State with Multiple Images & Specifications Support
   const [form, setForm] = useState({
     name: '',
     category: 'Holds',
     material: 'PU',
     price: '',
     stock: 25,
+    quantity: '1 Set',
+    holdType: 'Jug & Crimp',
+    difficulty: 'Medium - Hard',
+    boltType: 'M10 Allen',
+    hasColors: true,
     images: ['/images/crimps.jpg'],
     description: ''
   });
@@ -44,6 +49,11 @@ export default function AdminProducts() {
       material: 'PU',
       price: '',
       stock: 20,
+      quantity: '1 Set',
+      holdType: 'Jug & Crimp',
+      difficulty: 'Medium - Hard',
+      boltType: 'M10 Allen',
+      hasColors: true,
       images: ['/images/crimps.jpg'],
       description: ''
     });
@@ -56,12 +66,21 @@ export default function AdminProducts() {
       ? product.images
       : [product.image || '/images/crimps.jpg'];
 
+    const specs = product.specs || {};
+    const cat = (product.category || 'Holds').toLowerCase();
+    const isHoldLike = ['holds', 'macros', 'volumes'].includes(cat);
+
     setForm({
-      name: product.name,
+      name: product.name || '',
       category: product.category || 'Holds',
-      material: product.material || 'PU',
-      price: product.price,
-      stock: product.stock || 15,
+      material: product.material || specs.material || (cat === 'macros' ? 'Fiberglass' : 'PU'),
+      price: product.price || '',
+      stock: product.stock !== undefined ? product.stock : 15,
+      quantity: specs.quantity || '1 Set',
+      holdType: specs.type || '',
+      difficulty: specs.difficulty || 'Medium - Hard',
+      boltType: specs.boltType || 'M10 Allen',
+      hasColors: product.variants?.length > 0 || isHoldLike,
       images: existingImages,
       description: product.shortDescription || product.description || ''
     });
@@ -167,18 +186,32 @@ export default function AdminProducts() {
 
     const finalImages = form.images.length > 0 ? form.images : ['/images/crimps.jpg'];
 
+    const specsData = {
+      quantity: form.quantity?.trim() || '1 Set',
+      type: form.holdType?.trim() || (form.category === 'Macros' ? 'Pinch' : 'Mini Jug & Crimp'),
+      difficulty: form.difficulty?.trim() || 'Medium - Hard',
+      boltType: form.boltType?.trim() || 'M10 Allen',
+      material: form.material || (form.category === 'Macros' ? 'Fiberglass' : 'PU')
+    };
+
+    const variantsData = form.hasColors
+      ? [{ name: 'Color', options: defaultHoldColors }]
+      : [];
+
     try {
       if (editingProduct) {
         updateProduct(editingProduct.id, {
           name: form.name.trim(),
           category: form.category,
-          material: form.material || 'PU',
+          material: form.material || (form.category === 'Macros' ? 'Fiberglass' : 'PU'),
           price: priceNum,
           stock: stockNum,
           images: finalImages,
           image: finalImages[0],
           description: form.description,
-          shortDescription: form.description
+          shortDescription: form.description,
+          specs: specsData,
+          variants: variantsData
         });
         setNotification(`Product "${form.name.trim()}" updated successfully!`);
       } else {
@@ -203,14 +236,15 @@ export default function AdminProducts() {
           name: form.name.trim(),
           slug: finalSlug,
           category: form.category,
-          material: form.material || 'PU',
+          material: form.material || (form.category === 'Macros' ? 'Fiberglass' : 'PU'),
           price: priceNum,
           stock: stockNum,
           description: form.description,
           shortDescription: form.description,
           images: finalImages,
           image: finalImages[0],
-          variants: [],
+          specs: specsData,
+          variants: variantsData,
           rating: 5.0,
           reviewCount: 1,
           isNew: true,
@@ -517,6 +551,116 @@ export default function AdminProducts() {
                   />
                 </div>
               </div>
+
+                {/* CLIMBING HOLD & MACROS SPECIFICATIONS SECTION */}
+                <div className="space-y-4 pt-4 border-t border-white/10">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-[10px] uppercase font-bold tracking-widest text-neutral-400">
+                      SPESIFIKASI HOLD & MACROS
+                    </span>
+                    <span className="font-mono text-[9px] text-neutral-500 uppercase tracking-widest">
+                      PRODUCT DETAILS TABLE
+                    </span>
+                  </div>
+
+                  {/* Quantity & Hold Type */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="font-mono text-[10px] uppercase font-bold tracking-widest text-neutral-400 block">
+                        QUANTITY / SET
+                      </label>
+                      <input
+                        type="text"
+                        value={form.quantity}
+                        onChange={(e) => setForm({ ...form, quantity: e.target.value })}
+                        placeholder="Contoh: 7 Pcs, 19 Pcs, atau 1 Set"
+                        className="w-full bg-black border border-white/10 rounded-sm px-4 py-3 text-xs font-mono text-white focus:border-white/40 outline-none transition-all placeholder-neutral-700"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="font-mono text-[10px] uppercase font-bold tracking-widest text-neutral-400 block">
+                        HOLD TYPE / TIPE PEGANGAN
+                      </label>
+                      <input
+                        type="text"
+                        value={form.holdType}
+                        onChange={(e) => setForm({ ...form, holdType: e.target.value })}
+                        placeholder="Contoh: Pinch, Mini Jug & Crimp, Sloper"
+                        className="w-full bg-black border border-white/10 rounded-sm px-4 py-3 text-xs font-mono text-white focus:border-white/40 outline-none transition-all placeholder-neutral-700"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Difficulty & Bolt Insert */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="font-mono text-[10px] uppercase font-bold tracking-widest text-neutral-400 block">
+                        DIFFICULTY / TINGKAT KESULITAN
+                      </label>
+                      <select
+                        value={form.difficulty}
+                        onChange={(e) => setForm({ ...form, difficulty: e.target.value })}
+                        className="w-full bg-black border border-white/10 rounded-sm px-4 py-3 text-xs font-mono text-white focus:border-white/40 outline-none transition-all uppercase tracking-wider"
+                      >
+                        <option value="Easy" className="bg-black">Easy</option>
+                        <option value="Easy - Medium" className="bg-black">Easy - Medium</option>
+                        <option value="Medium" className="bg-black">Medium</option>
+                        <option value="Medium - Hard" className="bg-black">Medium - Hard</option>
+                        <option value="Hard" className="bg-black">Hard</option>
+                        <option value="All Levels" className="bg-black">All Levels</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="font-mono text-[10px] uppercase font-bold tracking-widest text-neutral-400 block">
+                        BOLT INSERT / TIPE BAUT
+                      </label>
+                      <select
+                        value={form.boltType}
+                        onChange={(e) => setForm({ ...form, boltType: e.target.value })}
+                        className="w-full bg-black border border-white/10 rounded-sm px-4 py-3 text-xs font-mono text-white focus:border-white/40 outline-none transition-all uppercase tracking-wider"
+                      >
+                        <option value="M10 Allen" className="bg-black">M10 Allen (Standar IFSC / Gym)</option>
+                        <option value="Screw-on" className="bg-black">Screw-on (Wood Screws)</option>
+                        <option value="M10 + Screws" className="bg-black">M10 Allen + Wood Screws</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Color Variants Toggle */}
+                  <div className="pt-2 pb-1 border-t border-white/[0.06]">
+                    <label className="flex items-center justify-between cursor-pointer group">
+                      <div>
+                        <span className="font-mono text-xs font-bold uppercase tracking-wider text-white block">
+                          PILIHAN VARIAN WARNA (IFSC / GYM COLORS)
+                        </span>
+                        <span className="font-mono text-[10px] text-neutral-500 uppercase tracking-widest block mt-0.5">
+                          AKTIFKAN PILIHAN WARNA STANDAR (11 WARNA) PADA HALAMAN PRODUK
+                        </span>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={form.hasColors}
+                        onChange={(e) => setForm({ ...form, hasColors: e.target.checked })}
+                        className="w-4 h-4 accent-white cursor-pointer"
+                      />
+                    </label>
+
+                    {form.hasColors && (
+                      <div className="flex flex-wrap gap-1.5 mt-3 pt-2 border-t border-white/[0.04]">
+                        {defaultHoldColors.map((c) => (
+                          <span
+                            key={c}
+                            className="px-2 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-white/5 border border-white/10 text-neutral-400"
+                          >
+                            {c}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
 
                 {/* MULTIPLE PHOTOS UPLOAD SECTION */}
                 <div className="space-y-3 pt-2">
