@@ -233,7 +233,7 @@ export default function ProductDetail() {
   };
 
   return (
-    <div className="bg-black text-white min-h-screen pb-24" style={{ paddingTop: '180px' }}>
+    <div className="bg-black text-white min-h-screen pb-24 pt-24 sm:pt-36">
       <div style={{ maxWidth: '1200px' }} className="mx-auto w-full px-6 md:px-12 space-y-12">
         
         {/* BREADCRUMB */}
@@ -402,49 +402,11 @@ export default function ProductDetail() {
           {/* Technical Specs & Pricing Grid */}
           <div className="grid sm:grid-cols-12 gap-8 items-start bg-neutral-950 border border-white/[0.06] rounded-lg p-6 sm:p-8">
             
-            {/* Specs Table Column */}
-            <div className="sm:col-span-7 space-y-4">
-              <h3 className="text-xs font-bold uppercase tracking-widest text-neutral-400 border-b border-white/[0.06] pb-2">
-                Product Details
-              </h3>
-              
-              <div className="space-y-2.5 text-xs">
-                <div className="flex justify-between py-1 border-b border-white/[0.06]">
-                  <span className="text-neutral-500 uppercase font-semibold">Quantity / Set:</span>
-                  <span className="text-white font-bold">{resolvedSpecs.quantity || '1 Set'}</span>
-                </div>
-                {resolvedSpecs.material && (
-                  <div className="flex justify-between py-1 border-b border-white/[0.06]">
-                    <span className="text-neutral-500 uppercase font-semibold">Material:</span>
-                    <span className="text-white font-bold">{resolvedSpecs.material}</span>
-                  </div>
-                )}
-                {resolvedSpecs.type && (
-                  <div className="flex justify-between py-1 border-b border-white/[0.06]">
-                    <span className="text-neutral-500 uppercase font-semibold">Hold Type:</span>
-                    <span className="text-neutral-300 font-medium">{resolvedSpecs.type}</span>
-                  </div>
-                )}
-                {resolvedSpecs.difficulty && (
-                  <div className="flex justify-between py-1 border-b border-white/[0.06]">
-                    <span className="text-neutral-500 uppercase font-semibold">Difficulty:</span>
-                    <span className="text-neutral-300 font-medium">{resolvedSpecs.difficulty}</span>
-                  </div>
-                )}
-                {resolvedSpecs.boltType && (
-                  <div className="flex justify-between py-1 border-b border-white/[0.06]">
-                    <span className="text-neutral-500 uppercase font-semibold">Bolt Insert:</span>
-                    <span className="text-neutral-300 font-medium">{resolvedSpecs.boltType}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Price & Add to Cart Column */}
-            <div className="sm:col-span-5 space-y-6 sm:border-l border-white/10 sm:pl-8">
+            {/* 1. Price, Color Selector & Add to Cart Column (Mobile First / Desktop Right) */}
+            <div className="order-1 sm:order-2 sm:col-span-5 space-y-6 sm:border-l border-white/10 sm:pl-8">
               <div className="space-y-1">
                 <span className="text-neutral-500 text-[10px] uppercase font-bold tracking-widest block">Price</span>
-                <div className="text-2xl font-black text-white">
+                <div className="text-2xl sm:text-3xl font-black text-white">
                   {formatPrice(product.price)}
                 </div>
               </div>
@@ -536,6 +498,44 @@ export default function ProductDetail() {
                 <ShoppingCart size={16} />
                 <span>{added ? "Added To Cart!" : "Add To Cart"}</span>
               </button>
+            </div>
+
+            {/* 2. Specs Table Column (Mobile Second / Desktop Left) */}
+            <div className="order-2 sm:order-1 sm:col-span-7 space-y-4 pt-6 sm:pt-0 border-t sm:border-t-0 border-white/10">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-neutral-400 border-b border-white/[0.06] pb-2">
+                Product Details
+              </h3>
+              
+              <div className="space-y-2.5 text-xs">
+                <div className="flex justify-between py-1 border-b border-white/[0.06]">
+                  <span className="text-neutral-500 uppercase font-semibold">Quantity / Set:</span>
+                  <span className="text-white font-bold">{resolvedSpecs.quantity || '1 Set'}</span>
+                </div>
+                {resolvedSpecs.material && (
+                  <div className="flex justify-between py-1 border-b border-white/[0.06]">
+                    <span className="text-neutral-500 uppercase font-semibold">Material:</span>
+                    <span className="text-white font-bold">{resolvedSpecs.material}</span>
+                  </div>
+                )}
+                {resolvedSpecs.type && (
+                  <div className="flex justify-between py-1 border-b border-white/[0.06]">
+                    <span className="text-neutral-500 uppercase font-semibold">Hold Type:</span>
+                    <span className="text-neutral-300 font-medium">{resolvedSpecs.type}</span>
+                  </div>
+                )}
+                {resolvedSpecs.difficulty && (
+                  <div className="flex justify-between py-1 border-b border-white/[0.06]">
+                    <span className="text-neutral-500 uppercase font-semibold">Difficulty:</span>
+                    <span className="text-neutral-300 font-medium">{resolvedSpecs.difficulty}</span>
+                  </div>
+                )}
+                {resolvedSpecs.boltType && (
+                  <div className="flex justify-between py-1 border-b border-white/[0.06]">
+                    <span className="text-neutral-500 uppercase font-semibold">Bolt Insert:</span>
+                    <span className="text-neutral-300 font-medium">{resolvedSpecs.boltType}</span>
+                  </div>
+                )}
+              </div>
             </div>
 
           </div>
