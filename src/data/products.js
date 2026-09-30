@@ -174,6 +174,32 @@ export const products = [
     isNew: true,
     isFeatured: true,
     createdAt: "2026-02-15",
+  },
+  {
+    id: 7,
+    name: "Mega Argus",
+    slug: "mega-argus",
+    category: "Macros",
+    material: "Fiberglass",
+    price: 3200000,
+    description: "Fiberglass sloper & jug climbing macros set. Medium difficulty level.",
+    shortDescription: "7 Pcs | 45cm - 60cm | Sloper & Jug",
+    images: ["/images/mega-argus.png"],
+    variants: [
+      { name: "Color", options: defaultHoldColors },
+    ],
+    specs: {
+      quantity: "7 Pcs",
+      difficulty: "Medium",
+      type: "Sloper & Jug",
+      material: "Fiberglass",
+      boltType: "M10 Allen",
+    },
+    rating: 5.0,
+    reviewCount: 12,
+    isNew: true,
+    isFeatured: true,
+    createdAt: "2026-03-01",
   }
 ];
 

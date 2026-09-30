@@ -16,7 +16,7 @@ export default function ProductCard({ product }) {
     >
       <Link to={`/product/${product.slug}`} className="block space-y-3">
         {/* Blokholds Style Image Container (Clean Light/Dark Neutral Studio Box) */}
-        <div className="relative aspect-[4/3] rounded-lg overflow-hidden bg-[#121212] border border-white/10 group-hover:border-white/20 transition-all duration-300 shadow-md p-2 flex items-center justify-center">
+        <div className="relative aspect-[4/3] rounded-lg overflow-hidden bg-white border border-white/10 group-hover:border-white/20 transition-all duration-300 shadow-md p-2 flex items-center justify-center">
           <img
             src={imageSrc}
             alt={product.name}
@@ -24,7 +24,7 @@ export default function ProductCard({ product }) {
             loading="lazy"
           />
           {product.material && (
-            <span className="absolute top-3 left-3 bg-white/10 backdrop-blur-sm text-white text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded border border-white/10">
+            <span className="absolute top-3 left-3 bg-black/70 backdrop-blur-sm text-white text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded border border-black/10">
               {product.material}
             </span>
           )}

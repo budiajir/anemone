@@ -64,23 +64,35 @@ export const useProductsStore = create(
     }),
     {
       name: 'anemone-products-storage',
-      version: 4,
+      version: 5,
       migrate: (persistedState, version) => {
+        // Version 5: Force reset to include Mega Argus and high-res Mega Eclipse photo
+        // This ensures all devices get the complete, up-to-date product catalog
+        if (version < 5) {
+          return { products: initialProducts };
+        }
+
         if (!persistedState || !persistedState.products) {
           return { products: initialProducts };
         }
-        // Normalize all products: ensure Holds, Macros, Volumes have specs, color variants, and correct assets
-        const cleanProducts = persistedState.products.map((p) => {
+
+        // Ensure all official products from initialProducts exist in persisted state
+        const persistedSlugs = new Set((persistedState.products || []).map(p => p.slug));
+        const missingProducts = initialProducts.filter(p => !persistedSlugs.has(p.slug));
+
+        let mergedProducts = [...persistedState.products, ...missingProducts];
+
+        // Normalize all products
+        const cleanProducts = mergedProducts.map((p) => {
           const cat = (p.category || '').toLowerCase();
           const isHoldLike = ['holds', 'macros', 'volumes'].includes(cat);
           let updated = { ...p };
 
-          // Fix Mega Eclipse image if pointing to motela or missing
-          if (p.slug === 'mega-eclipse') {
-            if (!updated.images || updated.images.length === 0 || updated.images[0] === '/images/motela.png') {
-              updated.images = ['/images/mega-eclipse.png'];
-              updated.image = '/images/mega-eclipse.png';
-            }
+          // Sync official product images from initialProducts source
+          const officialProduct = initialProducts.find(op => op.slug === p.slug);
+          if (officialProduct) {
+            updated.images = officialProduct.images;
+            updated.image = officialProduct.images[0];
           }
 
           // Automatically enable color variants for holds, macros, and volumes if not defined

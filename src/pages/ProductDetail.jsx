@@ -249,7 +249,7 @@ export default function ProductDetail() {
 
         {/* MAIN IMAGE CAROUSEL VIEWER */}
         <div className="space-y-6">
-          <div className="relative aspect-[4/3] sm:aspect-[16/10] w-full max-w-5xl mx-auto rounded-lg overflow-hidden bg-[#121212] border border-white/10 group shadow-2xl flex items-center justify-center p-4">
+          <div className="relative aspect-square sm:aspect-[4/3] md:aspect-[16/10] w-full max-w-5xl mx-auto rounded-lg overflow-hidden bg-white border border-white/10 group shadow-2xl flex items-center justify-center p-4 sm:p-6">
             <AnimatePresence mode="wait">
               <motion.img
                 key={activeImage}
