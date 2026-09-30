@@ -1,8 +1,9 @@
-import React, { useState, useMemo, useRef } from 'react';
-import { Plus, Edit2, Trash2, X, Check, Upload, Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { Plus, Edit2, Trash2, X, Check, Upload, Loader2, Cloud } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatPrice, defaultHoldColors } from '../../data/products';
 import { useProductsStore } from '../../store/productsStore';
+import { getProducts, upsertProduct, deleteProductFromDB } from '../../services/api';
 
 export default function AdminProducts() {
   // Subscribe to shared persistent Zustand productsStore
@@ -41,6 +42,22 @@ export default function AdminProducts() {
     return productList.filter((p) => p.category && p.category.toLowerCase() === categoryFilter.toLowerCase());
   }, [productList, categoryFilter]);
 
+  const [isLoadingCloud, setIsLoadingCloud] = useState(false);
+
+  // Sync products from Supabase on mount
+  useEffect(() => {
+    let isMounted = true;
+    setIsLoadingCloud(true);
+    getProducts().then((cloudProds) => {
+      if (isMounted && cloudProds && cloudProds.length > 0) {
+        useProductsStore.setState({ products: cloudProds });
+      }
+    }).finally(() => {
+      if (isMounted) setIsLoadingCloud(false);
+    });
+    return () => { isMounted = false; };
+  }, []);
+
   const handleOpenAddModal = () => {
     setEditingProduct(null);
     setForm({
@@ -76,10 +93,10 @@ export default function AdminProducts() {
       material: product.material || specs.material || (cat === 'macros' ? 'Fiberglass' : 'PU'),
       price: product.price || '',
       stock: product.stock !== undefined ? product.stock : 15,
-      quantity: specs.quantity || '1 Set',
-      holdType: specs.type || '',
-      difficulty: specs.difficulty || 'Medium - Hard',
-      boltType: specs.boltType || 'M10 Allen',
+      quantity: specs.quantity || (cat === 'macros' ? '7 Pcs' : '1 Set'),
+      holdType: specs.type || (cat === 'macros' ? 'Pinch' : 'Mini Jug & Crimp'),
+      difficulty: specs.difficulty || (cat === 'macros' ? 'Medium' : 'Medium - Hard'),
+      boltType: specs.boltType || (cat === 'macros' ? 'Screw-on' : 'M10 Allen'),
       hasColors: product.variants?.length > 0 || isHoldLike,
       images: existingImages,
       description: product.shortDescription || product.description || ''
@@ -131,9 +148,10 @@ export default function AdminProducts() {
   const [isUploading, setIsUploading] = useState(false);
   const [notification, setNotification] = useState('');
 
-  const handleDeleteProduct = (productId) => {
-    if (window.confirm('Are you sure you want to delete this product?')) {
-      deleteProduct(productId);
+  const handleDeleteProduct = async (productId) => {
+    const prod = productList.find(p => p.id === productId);
+    if (window.confirm(`Are you sure you want to delete "${prod?.name || 'this product'}"?`)) {
+      await deleteProductFromDB(productId, prod?.slug);
       setNotification('Product deleted successfully');
       setTimeout(() => setNotification(''), 4000);
     }
@@ -173,7 +191,7 @@ export default function AdminProducts() {
     }));
   };
 
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
 
     if (!form.name.trim()) {
@@ -187,10 +205,10 @@ export default function AdminProducts() {
     const finalImages = form.images.length > 0 ? form.images : ['/images/crimps.jpg'];
 
     const specsData = {
-      quantity: form.quantity?.trim() || '1 Set',
+      quantity: form.quantity?.trim() || (form.category === 'Macros' ? '7 Pcs' : '1 Set'),
       type: form.holdType?.trim() || (form.category === 'Macros' ? 'Pinch' : 'Mini Jug & Crimp'),
-      difficulty: form.difficulty?.trim() || 'Medium - Hard',
-      boltType: form.boltType?.trim() || 'M10 Allen',
+      difficulty: form.difficulty?.trim() || (form.category === 'Macros' ? 'Medium' : 'Medium - Hard'),
+      boltType: form.boltType?.trim() || (form.category === 'Macros' ? 'Screw-on' : 'M10 Allen'),
       material: form.material || (form.category === 'Macros' ? 'Fiberglass' : 'PU')
     };
 
@@ -200,8 +218,10 @@ export default function AdminProducts() {
 
     try {
       if (editingProduct) {
-        updateProduct(editingProduct.id, {
+        await upsertProduct({
+          id: editingProduct.id,
           name: form.name.trim(),
+          slug: editingProduct.slug,
           category: form.category,
           material: form.material || (form.category === 'Macros' ? 'Fiberglass' : 'PU'),
           price: priceNum,
@@ -213,7 +233,7 @@ export default function AdminProducts() {
           specs: specsData,
           variants: variantsData
         });
-        setNotification(`Product "${form.name.trim()}" updated successfully!`);
+        setNotification(`Product "${form.name.trim()}" updated & synced to cloud!`);
       } else {
         let cleanSlug = form.name
           .toLowerCase()
@@ -251,11 +271,11 @@ export default function AdminProducts() {
           isFeatured: false
         };
 
-        addProduct(newProd);
+        await upsertProduct(newProd);
 
         // Reset category filter to 'all' so new product is immediately visible
         setCategoryFilter('all');
-        setNotification(`New product "${newProd.name}" created successfully!`);
+        setNotification(`New product "${newProd.name}" created & synced to cloud!`);
       }
 
       setIsModalOpen(false);
@@ -491,7 +511,17 @@ export default function AdminProducts() {
                     </label>
                     <select
                       value={form.category}
-                      onChange={(e) => setForm({ ...form, category: e.target.value })}
+                      onChange={(e) => {
+                        const newCat = e.target.value;
+                        setForm((prev) => ({
+                          ...prev,
+                          category: newCat,
+                          material: newCat === 'Macros' ? 'Fiberglass' : (prev.material === 'Fiberglass' ? 'PU' : prev.material),
+                          boltType: newCat === 'Macros' ? 'Screw-on' : (prev.boltType === 'Screw-on' ? 'M10 Allen' : prev.boltType),
+                          holdType: newCat === 'Macros' && prev.holdType === 'Jug & Crimp' ? 'Pinch' : prev.holdType,
+                          quantity: newCat === 'Macros' && prev.quantity === '1 Set' ? '7 Pcs' : prev.quantity,
+                        }));
+                      }}
                       className="w-full bg-black border border-white/10 rounded-sm px-4 py-3 text-xs font-mono text-white focus:border-white/40 outline-none transition-all uppercase tracking-wider"
                     >
                       <option value="Holds" className="bg-black">Holds</option>

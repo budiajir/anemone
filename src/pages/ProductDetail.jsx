@@ -27,7 +27,7 @@ const colorMap = {
 function resolveProductSpecs(product) {
   if (!product) return {};
   const specs = product.specs || {};
-  const desc = (product.shortDescription || product.description || '').toLowerCase();
+  const desc = (product.shortDescription || product.short_description || product.description || '').toLowerCase();
   const cat = (product.category || '').toLowerCase();
   const isHoldLike = cat === 'holds' || cat === 'macros' || cat === 'volumes';
 
@@ -35,7 +35,7 @@ function resolveProductSpecs(product) {
   let quantity = specs.quantity;
   if (!quantity) {
     const qtyMatch = desc.match(/(\d+)\s*(pcs|buah|set)/i);
-    quantity = qtyMatch ? `${qtyMatch[1]} Pcs` : '1 Set';
+    quantity = qtyMatch ? `${qtyMatch[1]} Pcs` : (cat === 'macros' ? '7 Pcs' : '1 Set');
   }
 
   // Material
@@ -45,9 +45,9 @@ function resolveProductSpecs(product) {
   let type = specs.type;
   if (!type && isHoldLike) {
     if (desc.includes('pinch')) type = 'Pinch';
+    else if (desc.includes('sloper')) type = 'Sloper & Jug';
     else if (desc.includes('crimp')) type = 'Crimp';
     else if (desc.includes('jug')) type = 'Mini Jug & Crimp';
-    else if (desc.includes('sloper')) type = 'Sloper';
     else if (desc.includes('pocket')) type = 'Pocket';
     else type = cat === 'macros' ? 'Pinch' : 'Mini Jug & Crimp';
   }
@@ -57,15 +57,16 @@ function resolveProductSpecs(product) {
   if (!difficulty && isHoldLike) {
     if (desc.includes('easy - medium') || desc.includes('easy-medium')) difficulty = 'Easy - Medium';
     else if (desc.includes('medium - hard') || desc.includes('medium-hard')) difficulty = 'Medium - Hard';
+    else if (desc.includes('medium')) difficulty = 'Medium';
     else if (desc.includes('easy')) difficulty = 'Easy';
     else if (desc.includes('hard')) difficulty = 'Hard';
-    else difficulty = 'Medium - Hard';
+    else difficulty = cat === 'macros' ? 'Medium' : 'Medium - Hard';
   }
 
   // Bolt Insert
-  let boltType = specs.boltType;
+  let boltType = specs.boltType || specs.bolt_type;
   if (!boltType && isHoldLike) {
-    boltType = 'M10 Allen';
+    boltType = cat === 'macros' ? 'Screw-on' : 'M10 Allen';
   }
 
   return {
