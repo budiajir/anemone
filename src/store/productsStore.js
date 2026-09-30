@@ -64,11 +64,10 @@ export const useProductsStore = create(
     }),
     {
       name: 'anemone-products-storage',
-      version: 5,
+      version: 6,
       migrate: (persistedState, version) => {
-        // Version 5: Force reset to include Mega Argus and high-res Mega Eclipse photo
-        // This ensures all devices get the complete, up-to-date product catalog
-        if (version < 5) {
+        // Version 6: Force reset - sync Screw-on bolt insert for macros
+        if (version < 6) {
           return { products: initialProducts };
         }
 
