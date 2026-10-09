@@ -282,7 +282,7 @@ export default function AdminProducts() {
       setTimeout(() => setNotification(''), 4000);
     } catch (err) {
       console.error('Error submitting product:', err);
-      alert('An error occurred while saving the product. Please try again.');
+      alert(err.message || 'An error occurred while saving the product. Please try again.');
     }
   };
 

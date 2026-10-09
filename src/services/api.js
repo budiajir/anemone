@@ -149,8 +149,74 @@ export async function getProductBySlug(slug) {
  * Upsert product both to Zustand store and to Supabase cloud database
  */
 export async function upsertProduct(productData) {
-  // 1. Immediately update Zustand store for instant UI response
   const store = useProductsStore.getState();
+
+  // 1. Persist to Supabase cloud database if configured
+  if (isSupabaseConfigured && supabase) {
+    const payload = {
+      name: productData.name,
+      slug: productData.slug,
+      category: productData.category,
+      material: productData.material,
+      price: Number(productData.price) || 0,
+      stock: productData.stock !== undefined ? Number(productData.stock) : 20,
+      description: productData.description || '',
+      short_description: productData.shortDescription || productData.short_description || productData.description || '',
+      image: (productData.images && productData.images[0]) || productData.image || '/images/crimps.jpg',
+      images: productData.images || [productData.image || '/images/crimps.jpg'],
+      variants: productData.variants || [],
+      is_new: productData.isNew !== undefined ? productData.isNew : true,
+      is_featured: productData.isFeatured !== undefined ? productData.isFeatured : false,
+    };
+
+    // Check if product exists in Supabase by slug
+    const { data: existingRow, error: checkError } = await supabase
+      .from('anemone_products')
+      .select('id')
+      .eq('slug', productData.slug)
+      .maybeSingle();
+
+    if (checkError) {
+      console.warn('Check existing product error:', checkError);
+    }
+
+    if (existingRow) {
+      const { data, error } = await supabase
+        .from('anemone_products')
+        .update(payload)
+        .eq('id', existingRow.id)
+        .select();
+
+      if (error) {
+        console.error('Supabase update error:', error);
+        throw new Error(`Database Error: ${error.message}`);
+      }
+
+      if (data && data[0]) {
+        const normalized = normalizeProduct(data[0]);
+        store.updateProduct(existingRow.id, normalized);
+        return { success: true, product: normalized };
+      }
+    } else {
+      const { data, error } = await supabase
+        .from('anemone_products')
+        .insert([payload])
+        .select();
+
+      if (error) {
+        console.error('Supabase insert error:', error);
+        throw new Error(`Database Error: ${error.message}`);
+      }
+
+      if (data && data[0]) {
+        const normalized = normalizeProduct(data[0]);
+        store.addProduct(normalized);
+        return { success: true, product: normalized };
+      }
+    }
+  }
+
+  // 2. Fallback to Zustand store if Supabase is not configured
   const existing = (store.products || []).find(
     (p) => (productData.id && p.id === productData.id) || p.slug === productData.slug
   );
@@ -161,57 +227,6 @@ export async function upsertProduct(productData) {
     store.addProduct(productData);
   }
 
-  // 2. Persist to Supabase if configured
-  if (isSupabaseConfigured && supabase) {
-    try {
-      const payload = {
-        name: productData.name,
-        slug: productData.slug,
-        category: productData.category,
-        material: productData.material,
-        price: Number(productData.price) || 0,
-        stock: productData.stock !== undefined ? Number(productData.stock) : 20,
-        description: productData.description || '',
-        short_description: productData.shortDescription || productData.short_description || productData.description || '',
-        image: (productData.images && productData.images[0]) || productData.image || '/images/crimps.jpg',
-        images: productData.images || [productData.image || '/images/crimps.jpg'],
-        variants: productData.variants || [],
-        is_new: productData.isNew !== undefined ? productData.isNew : true,
-        is_featured: productData.isFeatured !== undefined ? productData.isFeatured : false,
-      };
-
-      // Check if product exists in Supabase by slug
-      const { data: existingRow } = await supabase
-        .from('anemone_products')
-        .select('id')
-        .eq('slug', productData.slug)
-        .maybeSingle();
-
-      if (existingRow) {
-        const { data, error } = await supabase
-          .from('anemone_products')
-          .update(payload)
-          .eq('id', existingRow.id)
-          .select();
-
-        if (!error && data && data[0]) {
-          return { success: true, product: normalizeProduct(data[0]) };
-        }
-      } else {
-        const { data, error } = await supabase
-          .from('anemone_products')
-          .insert([payload])
-          .select();
-
-        if (!error && data && data[0]) {
-          return { success: true, product: normalizeProduct(data[0]) };
-        }
-      }
-    } catch (err) {
-      console.warn('Error saving product to Supabase:', err);
-    }
-  }
-
   return { success: true, product: normalizeProduct(productData) };
 }
 
@@ -219,20 +234,23 @@ export async function upsertProduct(productData) {
  * Delete product from both Zustand store and Supabase
  */
 export async function deleteProductFromDB(id, slug) {
-  const store = useProductsStore.getState();
-  if (id) store.deleteProduct(id);
-
   if (isSupabaseConfigured && supabase) {
     try {
       if (slug) {
-        await supabase.from('anemone_products').delete().eq('slug', slug);
+        const { error } = await supabase.from('anemone_products').delete().eq('slug', slug);
+        if (error) throw error;
       } else if (id) {
-        await supabase.from('anemone_products').delete().eq('id', id);
+        const { error } = await supabase.from('anemone_products').delete().eq('id', id);
+        if (error) throw error;
       }
     } catch (err) {
-      console.warn('Error deleting product from Supabase:', err);
+      console.error('Error deleting product from Supabase:', err);
+      throw new Error(`Gagal menghapus dari database: ${err.message}`);
     }
   }
+
+  const store = useProductsStore.getState();
+  if (id) store.deleteProduct(id);
 }
 
 export async function createOrder(orderData) {
