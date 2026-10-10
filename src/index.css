@@ -21,7 +21,27 @@
   --shadow-glow-teal: 0 0 20px rgba(0, 229, 200, 0.15);
   --shadow-glow-coral: 0 0 20px rgba(255, 90, 110, 0.3);
   --shadow-glow-teal-lg: 0 0 40px rgba(0, 229, 200, 0.2);
+
+  /* Dark Industrial Flathold Design Tokens */
+  --color-border-dark: #262B2E;
+  --color-hairline-dark: #262B2E;
+  --color-text-muted: #666D71;
+  --color-surface-card: #0a0a0a;
+  --font-label-mono: 'JetBrains Mono', monospace;
+  --font-headline-code: 'Space Grotesk', sans-serif;
+  --font-nav-caps: 'Space Grotesk', sans-serif;
+  --font-display-hero: 'Space Grotesk', sans-serif;
+  --font-body-sm: 'Questrial', sans-serif;
+  --font-body-lg: 'Questrial', sans-serif;
 }
+
+/* Typography Utility Helpers */
+.font-label-mono { font-family: 'JetBrains Mono', monospace; }
+.font-headline-code { font-family: 'Space Grotesk', sans-serif; }
+.font-nav-caps { font-family: 'Space Grotesk', sans-serif; }
+.font-display-hero { font-family: 'Space Grotesk', sans-serif; }
+.font-body-sm { font-family: 'Questrial', sans-serif; }
+.font-body-lg { font-family: 'Questrial', sans-serif; }
 
 /* Base Styles */
 * {

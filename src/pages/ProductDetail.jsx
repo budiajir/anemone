@@ -1,78 +1,70 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Maximize2, ArrowLeft, Loader2, Minus, Plus, X } from 'lucide-react';
-import { formatPrice, defaultHoldColors } from '../data/products';
-import ProductCard from '../components/ProductCard';
+import { Maximize2, Loader2, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { formatPrice } from '../data/products';
 import { getProductBySlug, getProducts } from '../services/api';
+import { useCartStore } from '../store/cartStore';
+import SetterManifestModal from '../components/SetterManifestModal';
 
-const colorMap = {
-  red: "#ef4444",
-  blue: "#2563eb",
-  yellow: "#eab308",
-  green: "#10b981",
-  orange: "#f97316",
-  purple: "#a855f7",
-  pink: "#ec4899",
-  black: "#171717",
-  white: "#f8fafc",
-  grey: "#6b7280",
-  gray: "#6b7280",
-  cyan: "#06b6d4",
-  tosca: "#0d9488",
-  turquoise: "#06b6d4",
-};
+const ifscColors = [
+  { name: 'Black', hex: '#111111' },
+  { name: 'Dark Grey', hex: '#444444' },
+  { name: 'Blue', hex: '#2563eb' },
+  { name: 'Yellow', hex: '#eab308' },
+  { name: 'Green', hex: '#10b981' },
+  { name: 'White', hex: '#f8fafc' },
+  { name: 'Red', hex: '#ef4444' },
+  { name: 'Orange', hex: '#f97316' },
+];
 
 function resolveProductSpecs(product) {
   if (!product) return {};
   const specs = product.specs || {};
-  const desc = (product.shortDescription || product.short_description || product.description || '').toLowerCase();
   const cat = (product.category || '').toLowerCase();
-  const isHoldLike = cat === 'holds' || cat === 'macros' || cat === 'volumes';
+  const isMacro = cat === 'macros';
 
-  // Quantity
-  let quantity = specs.quantity;
-  if (!quantity) {
-    const qtyMatch = desc.match(/(\d+)\s*(pcs|buah|set)/i);
-    quantity = qtyMatch ? `${qtyMatch[1]} Pcs` : (cat === 'macros' ? '7 Pcs' : '1 Set');
+  // Composition Material
+  const composition = product.material || specs.material || (isMacro ? 'Hollow Fiber-Reinforced Polymer (FRP)' : 'High-density Polyurethane (PU)');
+
+  // Dimensions
+  let dimensions = specs.dimensions || specs.size;
+  if (!dimensions) {
+    dimensions = isMacro ? '520 × 440 × 210 mm (32.5 × 17.3 × 8.3")' : '310 × 240 × 95 mm (12.2 × 9.4 × 3.7")';
   }
 
-  // Material
-  const material = product.material || specs.material || (cat === 'macros' ? 'Fiberglass' : 'PU');
-
-  // Hold Type
-  let type = specs.type;
-  if (!type && isHoldLike) {
-    if (desc.includes('pinch')) type = 'Pinch';
-    else if (desc.includes('sloper')) type = 'Sloper & Jug';
-    else if (desc.includes('crimp')) type = 'Crimp';
-    else if (desc.includes('jug')) type = 'Mini Jug & Crimp';
-    else if (desc.includes('pocket')) type = 'Pocket';
-    else type = cat === 'macros' ? 'Pinch' : 'Mini Jug & Crimp';
+  // Weight
+  let weight = specs.weight;
+  if (!weight) {
+    weight = isMacro ? '3.40 kg / 7.50 lbs' : '1.85 kg / 4.08 lbs';
   }
 
-  // Difficulty
-  let difficulty = specs.difficulty;
-  if (!difficulty && isHoldLike) {
-    if (desc.includes('easy - medium') || desc.includes('easy-medium')) difficulty = 'Easy - Medium';
-    else if (desc.includes('medium - hard') || desc.includes('medium-hard')) difficulty = 'Medium - Hard';
-    else if (desc.includes('medium')) difficulty = 'Medium';
-    else if (desc.includes('easy')) difficulty = 'Easy';
-    else if (desc.includes('hard')) difficulty = 'Hard';
-    else difficulty = cat === 'macros' ? 'Medium' : 'Medium - Hard';
-  }
-
-  // Bolt Insert
+  // Bolt Insert / Hardware Fixation
   let boltType = specs.boltType || specs.bolt_type;
-  if (!boltType && isHoldLike) {
-    boltType = cat === 'macros' ? 'Screw-on' : 'M10 Allen';
+  if (!boltType) {
+    boltType = isMacro ? 'Screw-on' : 'M10 Allen';
+  }
+
+  const hardware = isMacro 
+    ? (specs.hardware || 'Screw-on / 5× Wood Anti-Spin Screws') 
+    : (specs.hardware || '1× CHC M10 Central + 2× Anti-Spin Screws');
+
+  // Torque
+  const torque = specs.torque || '45 Nm (Integrated Deflection Washer)';
+
+  // Panel Suitability
+  let panel = specs.panel || specs.difficulty;
+  if (!panel) {
+    panel = isMacro ? '15° to 55° Competition Overhangs' : '0° to 45° All Wall Profiles';
   }
 
   return {
-    quantity,
-    material,
-    type,
-    difficulty,
+    composition,
+    dimensions,
+    weight,
+    hardware,
+    torque,
+    panel,
     boltType,
   };
 }
@@ -84,11 +76,16 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const [allProducts, setAllProducts] = useState([]);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
-  const [selectedVariants, setSelectedVariants] = useState({});
+  const [selectedColor, setSelectedColor] = useState('Black');
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [addedToast, setAddedToast] = useState(false);
+
+  const addItem = useCartStore((state) => state.addItem);
+  const toggleManifest = useCartStore((state) => state.toggleManifest);
 
   // Keyboard navigation for Lightbox
   useEffect(() => {
@@ -102,7 +99,7 @@ export default function ProductDetail() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isFullscreen]);
 
-  // Fetch product by slug
+  // Fetch product data
   useEffect(() => {
     let isMounted = true;
 
@@ -117,34 +114,16 @@ export default function ProductDetail() {
             return;
           }
           setProduct(data);
-
-          const cat = (data.category || '').toLowerCase();
-          const isHoldLike = cat === 'holds' || cat === 'macros' || cat === 'volumes';
-
-          const variantsList =
-            data.variants && data.variants.length > 0
-              ? data.variants
-              : isHoldLike
-              ? [{ name: 'Color', options: defaultHoldColors }]
-              : [];
-
-          const defaultVariants = variantsList.reduce(
-            (acc, variant) => ({ ...acc, [variant.name]: variant.options?.[0] || '' }),
-            {}
-          );
-          setSelectedVariants(defaultVariants);
           setQuantity(1);
           setActiveImage(0);
           window.scrollTo(0, 0);
 
-          if (data.category) {
-            getProducts(data.category).then((catProducts) => {
-              if (isMounted) {
-                setRelatedProducts(
-                  catProducts.filter((p) => p.id !== data.id).slice(0, 3)
-                );
-              }
-            });
+          // Fetch all products for prev/next and related items
+          const list = await getProducts();
+          if (isMounted && Array.isArray(list)) {
+            setAllProducts(list);
+            const filtered = list.filter((p) => p.id !== data.id && (p.category?.toLowerCase() === data.category?.toLowerCase()));
+            setRelatedProducts(filtered.slice(0, 3));
           }
         }
       } catch (err) {
@@ -164,26 +143,14 @@ export default function ProductDetail() {
     };
   }, [slug]);
 
-  const effectiveVariants = useMemo(() => {
-    if (!product) return [];
-    if (product.variants && product.variants.length > 0) {
-      return product.variants;
-    }
-    const cat = (product.category || '').toLowerCase();
-    if (cat === 'holds' || cat === 'macros' || cat === 'volumes') {
-      return [{ name: 'Color', options: defaultHoldColors }];
-    }
-    return [];
-  }, [product]);
-
   const resolvedSpecs = useMemo(() => resolveProductSpecs(product), [product]);
 
   if (loading) {
     return (
-      <div className="bg-black text-white min-h-screen pt-32 pb-20 flex flex-col items-center justify-center text-center px-6">
-        <Loader2 size={40} className="text-teal animate-spin mb-4" />
-        <p className="text-xs uppercase font-bold tracking-widest text-neutral-400">
-          Loading Product Details...
+      <div className="bg-black text-white min-h-screen pt-32 pb-20 flex flex-col items-center justify-center text-center px-6 font-label-mono">
+        <Loader2 size={36} className="text-white animate-spin mb-4" />
+        <p className="text-xs uppercase tracking-widest text-[#666D71]">
+          LOADING SPECIMEN TELEMETRY...
         </p>
       </div>
     );
@@ -191,20 +158,19 @@ export default function ProductDetail() {
 
   if (error || !product) {
     return (
-      <div className="bg-black text-white min-h-screen pt-32 pb-20 flex flex-col items-center justify-center text-center px-6">
+      <div className="bg-black text-white min-h-screen pt-32 pb-20 flex flex-col items-center justify-center text-center px-6 font-label-mono">
         <div className="space-y-6 max-w-md">
-          <h2 className="text-3xl font-black uppercase tracking-wider text-neutral-500">
-            Product Not Found
+          <h2 className="text-3xl font-bold font-headline-lg uppercase tracking-wider text-white">
+            SPECIMEN NOT FOUND
           </h2>
-          <p className="text-neutral-400 text-sm font-light leading-relaxed">
-            Produk atau jalur yang Anda cari tidak dapat ditemukan.
+          <p className="text-[#666D71] text-xs font-light leading-relaxed">
+            The requested geometry or product identifier cannot be located in the current database.
           </p>
           <Link
             to="/shop"
-            className="inline-flex items-center gap-2 bg-white text-black font-bold px-6 py-3.5 rounded uppercase tracking-wider text-xs hover:bg-neutral-200 transition-all"
+            className="inline-flex items-center gap-2 border border-white px-6 py-3 uppercase tracking-wider text-xs font-nav-caps text-white hover:bg-white hover:text-black transition-colors"
           >
-            <ArrowLeft size={16} />
-            Back to Catalog
+            ← BACK TO CATALOG INDEX
           </Link>
         </div>
       </div>
@@ -223,337 +189,483 @@ export default function ProductDetail() {
     setActiveImage((prev) => (prev === images.length - 1 ? 0 : prev + 1));
   };
 
+  // Find prev and next products in category
+  const currentIndex = allProducts.findIndex((p) => p.id === product.id);
+  const prevProduct = currentIndex > 0 ? allProducts[currentIndex - 1] : null;
+  const nextProduct = currentIndex < allProducts.length - 1 && currentIndex >= 0 ? allProducts[currentIndex + 1] : null;
+
   const handleDirectOrder = () => {
-    if (!product) return;
-    const colorStr = selectedVariants.Color ? ` (${selectedVariants.Color})` : '';
-    const text = `Halo Anemone, saya ingin memesan:\n• Produk: ${product.name}${colorStr}\n• Kategori: ${product.category}\n• Jumlah: ${quantity} Set\n• Bolt Insert: ${resolvedSpecs.boltType || 'Screw-on'}\n• Total: ${formatPrice(product.price * quantity)}\n\nMohon info ketersediaan stok & pengiriman. Terima kasih!`;
+    const text = `Halo Anemone B2B Desk, saya ingin memesan:\n• Produk: ${product.name}\n• Kategori: ${product.category}\n• Warna IFSC: ${selectedColor}\n• Jumlah: ${quantity} Set\n• Bolt Insert / Fixation: ${resolvedSpecs.boltType}\n• Total: ${formatPrice(product.price * quantity)}\n\nMohon info ketersediaan stok & delivery schedule. Terima kasih.`;
     window.open(`https://wa.me/628569044778?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
   };
 
+  const handleAddToManifest = () => {
+    addItem(product, { Color: selectedColor }, quantity);
+    setAddedToast(true);
+    setTimeout(() => setAddedToast(false), 2400);
+  };
+
+  const angleLabels = [
+    '01 / APEX PERSPECTIVE',
+    '02 / REVERSE CAVITY & WASHER',
+    '03 / 40° COMP OVERHANG',
+    '04 / SURFACE DUAL-TEX MACRO',
+  ];
+
+  const seriesTag = (product.category || 'MACROS').toUpperCase();
+  const weightNum = parseFloat(resolvedSpecs.weight) || 3.4;
+  const totalWeightCalc = (weightNum * quantity).toFixed(2);
+
   return (
-    <div className="bg-black text-white min-h-screen pb-24 pt-24 sm:pt-36">
-      <div style={{ maxWidth: '1200px' }} className="mx-auto w-full px-6 md:px-12 space-y-12">
-        
-        {/* BREADCRUMB */}
-        <div>
-          <Link
-            to="/shop"
-            className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-neutral-500 hover:text-white transition-colors"
-          >
-            <ArrowLeft size={14} />
-            <span>Back to Catalog</span>
+    <div className="bg-black text-white min-h-screen pt-16">
+      {/* 1. TOP SUB-NAV BREADCRUMB STRIP */}
+      <div className="w-full border-b border-[#262B2E] bg-black text-[#666D71] font-label-mono text-[11px] uppercase tracking-wider px-4 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-4">
+        {/* Left: Breadcrumb */}
+        <div className="flex items-center gap-2">
+          <Link to="/shop" className="hover:text-white transition-colors flex items-center gap-1 text-[#666D71]">
+            <span>‹ CATALOG INDEX</span>
           </Link>
+          <span>/</span>
+          <Link to={`/shop?category=${product.category?.toLowerCase()}`} className="hover:text-white transition-colors text-[#666D71]">
+            {seriesTag}
+          </Link>
+          <span>/</span>
+          <span className="text-white font-medium">{product.name}</span>
         </div>
 
-        {/* MAIN IMAGE CAROUSEL VIEWER */}
-        <div className="space-y-6">
-          <div className="relative aspect-square sm:aspect-[4/3] md:aspect-[16/10] w-full max-w-5xl mx-auto rounded-lg overflow-hidden bg-[#121212] border border-white/10 group shadow-2xl flex items-center justify-center p-4 sm:p-6">
+        {/* Right: Series Navigation Prev / Next */}
+        <div className="flex items-center gap-3">
+          <span className="hidden sm:inline text-[#666D71] text-[10px]">SERIES NAVIGATION</span>
+          {prevProduct && (
+            <Link
+              to={`/product/${prevProduct.slug || prevProduct.id}`}
+              className="px-2.5 py-1 border border-[#262B2E] hover:border-white/60 text-[#666D71] hover:text-white transition-colors text-[10px]"
+            >
+              PREV [{prevProduct.name?.slice(0, 10)}]
+            </Link>
+          )}
+          {nextProduct && (
+            <Link
+              to={`/product/${nextProduct.slug || nextProduct.id}`}
+              className="px-2.5 py-1 border border-[#262B2E] hover:border-white/60 text-[#666D71] hover:text-white transition-colors text-[10px]"
+            >
+              NEXT [{nextProduct.name?.slice(0, 10)}] →
+            </Link>
+          )}
+        </div>
+      </div>
+
+      {/* 2. MAIN 2-COLUMN SPLIT SECTION (7/5) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[calc(100vh-140px)] border-b border-[#262B2E]">
+        
+        {/* ─── LEFT COLUMN: STUDIO SPECIMEN STAGE (7 Cols) ─── */}
+        <div className="lg:col-span-7 flex flex-col border-b lg:border-b-0 lg:border-r border-[#262B2E] bg-black">
+          {/* Micro Telemetry Header */}
+          <div className="border-b border-[#262B2E] px-4 lg:px-8 py-3 flex items-center justify-between font-label-mono text-[10px] uppercase tracking-widest text-[#666D71]">
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="text-white font-medium">● STUDIO SPECIMEN // SWISS SCAN</span>
+            </div>
+            <div className="text-right truncate max-w-[280px] sm:max-w-none text-[#666D71]">
+              DUAL-TEXTURE: GLOSS ZERO-FRICTION + 120-GRIT MICRO-TEX
+            </div>
+          </div>
+
+          {/* Interactive Studio Stage */}
+          <div className="relative flex-1 min-h-[460px] lg:min-h-[580px] bg-[#050505] flex items-center justify-center p-6 lg:p-12 overflow-hidden group">
+            {/* Coordinate Crosshairs */}
+            <div className="absolute top-4 left-4 font-label-mono text-[10px] text-[#44494c] tracking-wider select-none pointer-events-none">
+              AXIS: Z+{activeImage * 35 + 210}mm // ROT: {activeImage * 45 + 32}°
+            </div>
+            <div className="absolute bottom-4 right-4 font-label-mono text-[10px] text-[#44494c] tracking-wider select-none pointer-events-none">
+              SCALE: 1:1 METRIC
+            </div>
+
+            {/* Specimen Product Image */}
             <AnimatePresence mode="wait">
               <motion.img
                 key={activeImage}
                 src={images[activeImage]}
-                alt={`${product.name} preview ${activeImage + 1}`}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                alt={product.name}
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
+                transition={{ duration: 0.25 }}
                 onClick={() => setIsFullscreen(true)}
-                className="w-full h-full object-contain cursor-zoom-in hover:scale-102 transition-transform duration-300"
+                className="max-h-[65vh] max-w-full object-contain cursor-zoom-in transition-transform duration-500 group-hover:scale-102 select-none"
               />
             </AnimatePresence>
 
-            {/* Left & Right Arrow Navigation Controls */}
+            {/* Lightbox / Zoom Trigger Icon */}
+            <button
+              onClick={() => setIsFullscreen(true)}
+              className="absolute top-4 right-4 p-2 border border-[#262B2E] bg-black/70 hover:bg-white text-white hover:text-black transition-colors"
+              title="Expand High-Resolution View"
+            >
+              <Maximize2 size={14} />
+            </button>
+
+            {/* Left & Right Arrow controls if multiple images */}
             {images.length > 1 && (
               <>
                 <button
                   onClick={handlePrevImage}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/70 hover:bg-white text-white hover:text-black flex items-center justify-center transition-all border border-white/10 backdrop-blur-md cursor-pointer z-10"
-                  aria-label="Previous Image"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-9 h-9 border border-[#262B2E] bg-black/80 hover:bg-white text-white hover:text-black flex items-center justify-center transition-colors"
+                  aria-label="Previous Perspective"
                 >
-                  <ChevronLeft size={22} />
+                  <ChevronLeft size={18} />
                 </button>
-
                 <button
                   onClick={handleNextImage}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/70 hover:bg-white text-white hover:text-black flex items-center justify-center transition-all border border-white/10 backdrop-blur-md cursor-pointer z-10"
-                  aria-label="Next Image"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-9 h-9 border border-[#262B2E] bg-black/80 hover:bg-white text-white hover:text-black flex items-center justify-center transition-colors"
+                  aria-label="Next Perspective"
                 >
-                  <ChevronRight size={22} />
+                  <ChevronRight size={18} />
                 </button>
               </>
             )}
-
-            {/* Fullscreen Expand Icon */}
-            <button
-              onClick={() => setIsFullscreen(true)}
-              className="absolute top-4 right-4 p-2.5 rounded-xl bg-black/70 hover:bg-white text-white hover:text-black border border-white/10 backdrop-blur-md transition-all cursor-pointer z-10 flex items-center gap-2"
-              title="Click to Zoom Fullscreen"
-            >
-              <Maximize2 size={16} />
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider hidden sm:inline">ZOOM</span>
-            </button>
           </div>
 
-          {/* HORIZONTAL THUMBNAIL GALLERY STRIP */}
-          {images.length > 1 && (
-            <div className="flex items-center justify-center gap-3 overflow-x-auto pb-2 max-w-4xl mx-auto px-4">
-              {images.map((img, index) => {
-                const isActive = activeImage === index;
+          {/* Perspective View Angle Selector Strip */}
+          <div className="border-t border-[#262B2E] p-3 lg:p-4 bg-black flex flex-wrap items-center justify-between gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 flex-1">
+              {angleLabels.map((angle, idx) => {
+                const isActive = activeImage === (idx % images.length);
                 return (
                   <button
-                    key={index}
-                    onClick={() => setActiveImage(index)}
-                    className={`w-20 h-16 sm:w-24 sm:h-20 rounded overflow-hidden shrink-0 border-2 transition-all cursor-pointer bg-[#121212] p-1 ${
+                    key={idx}
+                    onClick={() => setActiveImage(idx % images.length)}
+                    className={`px-3 py-2 text-left font-label-mono text-[10px] uppercase tracking-wider border transition-colors cursor-pointer ${
                       isActive
-                        ? 'border-white scale-105'
-                        : 'border-white/10 hover:border-white/30 opacity-70 hover:opacity-100'
+                        ? 'border-white text-white bg-white/10'
+                        : 'border-[#262B2E] text-[#666D71] hover:text-white hover:border-[#444]'
                     }`}
                   >
-                    <img
-                      src={img}
-                      alt={`${product.name} thumbnail ${index + 1}`}
-                      className="w-full h-full object-contain"
-                    />
+                    {angle}
                   </button>
                 );
               })}
             </div>
-          )}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setIsFullscreen(true)}
+                className="px-3 py-2 font-label-mono text-[10px] uppercase tracking-wider border border-[#262B2E] text-[#666D71] hover:text-white hover:border-[#444] cursor-pointer"
+              >
+                [ 1:1 HAND SCALE ]
+              </button>
+              <button
+                onClick={() => setIsFullscreen(true)}
+                className="px-3 py-2 font-label-mono text-[10px] uppercase tracking-wider border border-[#262B2E] text-[#666D71] hover:text-white hover:border-[#444] cursor-pointer"
+              >
+                [ 360° ISOMETRIC ]
+              </button>
+            </div>
+          </div>
         </div>
 
-        {/* FULLSCREEN LIGHTBOX MODAL */}
-        <AnimatePresence>
-          {isFullscreen && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-4 md:p-8"
-              onClick={() => setIsFullscreen(false)}
-            >
-              {/* Lightbox Top Header */}
-              <div className="absolute top-6 left-6 right-6 flex items-center justify-between z-20 text-white pointer-events-auto">
-                <div className="space-y-0.5">
-                  <span className="text-[10px] font-mono uppercase tracking-widest text-neutral-400 block">
-                    HIGH-RESOLUTION VIEW ({activeImage + 1} OF {images.length})
-                  </span>
-                  <h4 className="text-base font-bold uppercase tracking-wider">{product.name}</h4>
-                </div>
-                <button
-                  onClick={() => setIsFullscreen(false)}
-                  className="w-11 h-11 rounded-full bg-white/10 hover:bg-white text-white hover:text-black flex items-center justify-center transition-all border border-white/20 cursor-pointer"
-                  title="Close Zoom (Esc)"
-                >
-                  <X size={20} />
-                </button>
-              </div>
+        {/* ─── RIGHT COLUMN: TECHNICAL SPECS & DIRECT B2B ACTIONS (5 Cols) ─── */}
+        <div className="lg:col-span-5 flex flex-col justify-between p-6 lg:p-10 bg-black">
+          <div>
+            {/* Series Label & Code */}
+            <div className="font-label-mono text-[11px] uppercase tracking-widest text-[#666D71] mb-2">
+              SERIES: {seriesTag} [2026]
+            </div>
 
-              {/* Lightbox Image Container */}
-              <div
-                className="relative max-w-6xl max-h-[85vh] w-full h-full flex items-center justify-center p-2 sm:p-6"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <img
-                  src={images[activeImage]}
-                  alt={`${product.name} zoomed`}
-                  className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl select-none"
-                />
+            {/* Shaper Series Designation */}
+            <div className="font-headline-code text-xl text-neutral-400 uppercase tracking-wide">
+              {product.category || 'Anemone'}
+            </div>
 
-                {/* Lightbox Arrow Controls */}
-                {images.length > 1 && (
-                  <>
-                    <button
-                      onClick={handlePrevImage}
-                      className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/80 hover:bg-white text-white hover:text-black flex items-center justify-center transition-all border border-white/20 cursor-pointer shadow-lg"
-                    >
-                      <ChevronLeft size={24} />
-                    </button>
-                    <button
-                      onClick={handleNextImage}
-                      className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/80 hover:bg-white text-white hover:text-black flex items-center justify-center transition-all border border-white/20 cursor-pointer shadow-lg"
-                    >
-                      <ChevronRight size={24} />
-                    </button>
-                  </>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* PRODUCT DETAILS & PURCHASE PANEL */}
-        <div className="max-w-4xl mx-auto space-y-8 border-t border-white/10 pt-10">
-          
-          {/* Header & Title */}
-          <div className="space-y-2 text-center sm:text-left">
-            <span className="bg-white/5 border border-white/10 rounded px-2 py-1 text-[10px] font-bold tracking-widest uppercase inline-block w-max">
-              {product.category}
-            </span>
-            <h1 className="text-3xl sm:text-5xl font-black uppercase tracking-tight text-white font-sans mt-2">
+            {/* Monumental Product Title */}
+            <h1 className="font-headline-xl text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white uppercase mt-1 mb-4 leading-none">
               {product.name}
             </h1>
-            <p className="text-neutral-400 text-sm md:text-base font-light leading-relaxed max-w-2xl">
-              {product.description || product.shortDescription}
+
+            {/* Price Row */}
+            {product.price > 0 && (
+              <div className="font-label-mono text-base font-semibold text-white mb-4">
+                {formatPrice(product.price)}
+                <span className="text-[11px] text-[#666D71] font-normal ml-2">/ SET (EXCL. TAX)</span>
+              </div>
+            )}
+
+            {/* Editorial Description */}
+            <p className="font-body-sm text-[13px] text-[#a0a0a0] leading-relaxed mb-6 font-light">
+              {product.description || product.shortDescription || 'Curved dual-texture volume engineered for delicate compression sloper sequences, friction arrester blocks, and dynamic body displacement on steep competition panels.'}
             </p>
-          </div>
 
-          {/* Technical Specs & Pricing Grid */}
-          <div className="grid sm:grid-cols-12 gap-8 items-start bg-neutral-950 border border-white/[0.06] rounded-lg p-6 sm:p-8">
-            
-            {/* 1. Price, Color Selector & Add to Cart Column (Mobile First / Desktop Right) */}
-            <div className="order-1 sm:order-2 sm:col-span-5 space-y-6 sm:border-l border-white/10 sm:pl-8">
-              <div className="space-y-1">
-                <span className="text-neutral-500 text-[10px] uppercase font-bold tracking-widest block">Price</span>
-                <div className="text-2xl sm:text-3xl font-black text-white">
-                  {formatPrice(product.price)}
-                </div>
+            {/* Technical Specifications Hairline Grid */}
+            <div className="border-t border-[#262B2E] divide-y divide-[#262B2E] font-label-mono text-[11px] mb-6">
+              <div className="py-2.5 flex justify-between items-center">
+                <span className="text-[#666D71] uppercase tracking-wider">COMPOSITION MATERIAL</span>
+                <span className="text-white uppercase font-medium">{resolvedSpecs.composition}</span>
               </div>
-
-              {/* COLOR / VARIANT SELECTOR */}
-              {effectiveVariants.length > 0 && (
-                <div className="space-y-4 pt-4 border-t border-white/10">
-                  {effectiveVariants.map((variant) => {
-                    const currentSelected = selectedVariants[variant.name] || variant.options?.[0] || '';
-                    return (
-                      <div key={variant.name} className="space-y-2.5">
-                        <div className="flex items-center justify-between text-[11px] uppercase tracking-wider">
-                          <span className="text-neutral-400 font-bold">PILIH {variant.name}:</span>
-                          <span className="text-white font-bold bg-white/10 px-2.5 py-0.5 rounded font-mono text-[10px]">
-                            {currentSelected}
-                          </span>
-                        </div>
-
-                        <div className="flex flex-wrap gap-2">
-                          {variant.options?.map((opt) => {
-                            const isSelected = currentSelected === opt;
-                            const lower = opt.toLowerCase();
-                            const dotColor = colorMap[lower] || null;
-
-                            return (
-                              <button
-                                key={opt}
-                                type="button"
-                                onClick={() =>
-                                  setSelectedVariants((prev) => ({
-                                    ...prev,
-                                    [variant.name]: opt,
-                                  }))
-                                }
-                                className={`px-3 py-2 rounded text-xs font-bold uppercase tracking-wider flex items-center gap-2 border transition-all cursor-pointer ${
-                                  isSelected
-                                    ? 'bg-white text-black border-white shadow-md scale-105'
-                                    : 'bg-black/60 text-neutral-300 border-white/15 hover:border-white/40 hover:text-white'
-                                }`}
-                              >
-                                {dotColor && (
-                                  <span
-                                    className={`w-3.5 h-3.5 rounded-full shrink-0 border ${
-                                      isSelected ? 'border-black/40' : 'border-white/30'
-                                    }`}
-                                    style={{ backgroundColor: dotColor }}
-                                  />
-                                )}
-                                <span>{opt}</span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Quantity Selector */}
-              <div className="space-y-2">
-                <span className="text-[10px] uppercase font-bold tracking-widest text-neutral-400 block">Select Quantity</span>
-                <div className="flex items-center justify-between border border-white/10 rounded bg-black h-12 px-2">
-                  <button
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="p-2 text-neutral-400 hover:text-white transition-colors cursor-pointer"
-                  >
-                    <Minus size={14} />
-                  </button>
-                  <span className="text-sm font-bold">{quantity}</span>
-                  <button
-                    onClick={() => setQuantity(quantity + 1)}
-                    className="p-2 text-neutral-400 hover:text-white transition-colors cursor-pointer"
-                  >
-                    <Plus size={14} />
-                  </button>
-                </div>
+              <div className="py-2.5 flex justify-between items-center">
+                <span className="text-[#666D71] uppercase tracking-wider">EXTERNAL DIMENSIONS</span>
+                <span className="text-white uppercase font-medium">{resolvedSpecs.dimensions}</span>
               </div>
+              <div className="py-2.5 flex justify-between items-center">
+                <span className="text-[#666D71] uppercase tracking-wider">SET PIECE MASS</span>
+                <span className="text-white uppercase font-medium">{resolvedSpecs.weight}</span>
+              </div>
+              <div className="py-2.5 flex justify-between items-center">
+                <span className="text-[#666D71] uppercase tracking-wider">HARDWARE FIXATION</span>
+                <span className="text-white uppercase font-medium">{resolvedSpecs.hardware}</span>
+              </div>
+              <div className="py-2.5 flex justify-between items-center">
+                <span className="text-[#666D71] uppercase tracking-wider">MAX FASTENING TORQUE</span>
+                <span className="text-white uppercase font-medium">{resolvedSpecs.torque}</span>
+              </div>
+              <div className="py-2.5 flex justify-between items-center">
+                <span className="text-[#666D71] uppercase tracking-wider">PANEL SUITABILITY</span>
+                <span className="text-white uppercase font-medium">{resolvedSpecs.panel}</span>
+              </div>
+              <div className="py-2.5 flex justify-between items-center">
+                <span className="text-[#666D71] uppercase tracking-wider">SHAPER DESIGNATION</span>
+                <span className="text-white uppercase font-medium">Anemone Lab (Bandung, ID)</span>
+              </div>
+            </div>
 
-              {/* WhatsApp Direct Order Button */}
+            {/* IFSC Color Palette Swatches */}
+            <div className="border-t border-[#262B2E] pt-4 pb-4">
+              <div className="flex items-center justify-between font-label-mono text-[10px] uppercase tracking-wider mb-3">
+                <span className="text-[#666D71]">IFSC COLOR PALETTE</span>
+                <span className="text-white font-medium">{selectedColor.toUpperCase()} / DUAL-TEX MATTE-GLOSS</span>
+              </div>
+              <div className="flex items-center gap-2.5 flex-wrap">
+                {ifscColors.map((color) => {
+                  const isSelected = selectedColor === color.name;
+                  return (
+                    <button
+                      key={color.name}
+                      type="button"
+                      onClick={() => setSelectedColor(color.name)}
+                      className={`w-6 h-6 rounded-full border-2 transition-all cursor-pointer ${
+                        isSelected ? 'border-white scale-110 shadow-lg' : 'border-transparent hover:border-[#666]'
+                      }`}
+                      style={{ backgroundColor: color.hex }}
+                      title={color.name}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Set Quantity Stepper */}
+            <div className="border border-[#262B2E] p-3 flex items-center justify-between font-label-mono text-[11px] mb-6">
+              <div>
+                <span className="text-[#666D71] block text-[9px] uppercase tracking-widest">SET SELECTOR</span>
+                <span className="text-white font-medium">WEIGHT: {totalWeightCalc} KG</span>
+              </div>
+              <div className="flex items-center border border-[#262B2E]">
+                <button
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  className="w-8 h-8 flex items-center justify-center text-[#666D71] hover:text-white border-r border-[#262B2E] transition-colors cursor-pointer"
+                >
+                  -
+                </button>
+                <span className="w-10 text-center font-bold text-white text-xs">{quantity}</span>
+                <button
+                  onClick={() => setQuantity(quantity + 1)}
+                  className="w-8 h-8 flex items-center justify-center text-[#666D71] hover:text-white border-l border-[#262B2E] transition-colors cursor-pointer"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            {/* CTAs */}
+            <div className="space-y-2.5">
+              {/* WhatsApp Direct Order White Pill Button */}
               <button
                 type="button"
                 onClick={handleDirectOrder}
-                className="w-full h-14 rounded font-bold uppercase tracking-wider text-xs transition-all duration-300 flex items-center justify-center gap-2.5 bg-white text-black hover:bg-neutral-200 cursor-pointer shadow-lg active:scale-98"
+                className="w-full bg-white hover:bg-neutral-200 text-black font-nav-caps text-[12px] uppercase tracking-wider py-3.5 px-6 rounded-full flex items-center justify-between font-semibold transition-colors cursor-pointer group"
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                </svg>
-                <span>Pesan Sekarang via WhatsApp</span>
+                <span className="flex items-center gap-2">
+                  PESAN LANGSUNG VIA WHATSAPP
+                  <span className="text-[9px] font-label-mono border border-black/20 rounded-full px-2 py-0.5">DIRECT B2B DESK</span>
+                </span>
+                <span className="group-hover:translate-x-1 transition-transform">→</span>
+              </button>
+
+              {/* Setter Manifest Tray Button */}
+              <button
+                type="button"
+                onClick={handleAddToManifest}
+                className="w-full border border-[#262B2E] hover:border-white/50 text-white font-nav-caps text-[11px] uppercase tracking-wider py-3 px-6 flex items-center justify-between transition-colors cursor-pointer"
+              >
+                <span>+ TAMBAH KE SETTER MANIFEST TRAY</span>
+                <span className="text-[9px] font-label-mono text-[#666D71]">SPEC REF: #{product.id?.toString().slice(0, 5) || 'A0283'}</span>
+              </button>
+
+              {/* Technical Asset Links row */}
+              <div className="grid grid-cols-2 gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => window.open(`https://wa.me/628569044778?text=${encodeURIComponent(`Halo Anemone, mohon kirim file CAD 3D / STEP untuk produk: ${product.name}`)}`)}
+                  className="border border-[#262B2E] hover:border-[#666] text-[#666D71] hover:text-white py-2 px-3 text-[10px] font-label-mono uppercase tracking-wider flex items-center justify-between cursor-pointer"
+                >
+                  <span>CAD STEP / OBJ 3D</span>
+                  <span>[34MB]</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => window.open(`https://wa.me/628569044778?text=${encodeURIComponent(`Halo Anemone, mohon kirim PDF Technical Spec Archive untuk produk: ${product.name}`)}`)}
+                  className="border border-[#262B2E] hover:border-[#666] text-[#666D71] hover:text-white py-2 px-3 text-[10px] font-label-mono uppercase tracking-wider flex items-center justify-between cursor-pointer"
+                >
+                  <span>PDF SPEC ARCHIVE</span>
+                  <span>[1.2MB]</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* 3. IN-SERIES GEOMETRIC FAMILIES / COMPLEMENTARY SHAPES */}
+      {relatedProducts.length > 0 && (
+        <section className="p-6 lg:p-12 border-b border-[#262B2E] bg-black">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 pb-4 border-b border-[#262B2E] gap-4">
+            <div>
+              <span className="font-label-mono text-[10px] uppercase tracking-widest text-[#666D71] block mb-1">
+                IN-SERIES GEOMETRIC FAMILIES
+              </span>
+              <h2 className="font-headline-lg text-2xl lg:text-3xl uppercase font-bold tracking-tight text-white">
+                COMPLEMENTARY SHAPES IN {seriesTag} FAMILY
+              </h2>
+            </div>
+            <div className="flex items-center gap-4 font-label-mono text-[11px] text-[#666D71]">
+              <span className="hidden sm:inline">MATCHING INCLINATION: 25°–55°</span>
+              <Link to="/shop" className="text-white hover:underline flex items-center gap-1">
+                VIEW FULL CATALOG →
+              </Link>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {relatedProducts.map((rel) => {
+              const relSpecs = resolveProductSpecs(rel);
+              return (
+                <div key={rel.id} className="border border-[#262B2E] bg-black flex flex-col group hover:border-white/30 transition-colors">
+                  {/* Card Header Spec */}
+                  <div className="border-b border-[#262B2E] p-3 flex justify-between font-label-mono text-[10px] uppercase tracking-wider text-[#666D71]">
+                    <span>SPEC: {rel.material || 'FIBERGLASS'}</span>
+                    <span>{relSpecs.dimensions?.split('(')[0] || '520 × 440 MM'}</span>
+                  </div>
+
+                  {/* Card Stage Specimen */}
+                  <Link to={`/product/${rel.slug || rel.id}`} className="relative h-64 bg-[#050505] flex items-center justify-center p-6 overflow-hidden">
+                    <img
+                      src={rel.images?.[0] || rel.image || '/images/crimps.jpg'}
+                      alt={rel.name}
+                      className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
+                    />
+                  </Link>
+
+                  {/* Card Footer */}
+                  <div className="border-t border-[#262B2E] p-4 flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] font-label-mono text-[#666D71] block uppercase">{rel.category}</span>
+                      <span className="font-headline-code text-sm font-bold text-white uppercase">{rel.name}</span>
+                    </div>
+                    <Link
+                      to={`/product/${rel.slug || rel.id}`}
+                      className="px-3 py-1.5 border border-[#262B2E] group-hover:border-white text-[10px] font-label-mono uppercase text-[#666D71] group-hover:text-white transition-colors"
+                    >
+                      SPEC →
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* 4. FULLSCREEN LIGHTBOX MODAL */}
+      <AnimatePresence>
+        {isFullscreen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-4 md:p-8"
+            onClick={() => setIsFullscreen(false)}
+          >
+            {/* Lightbox Top Header */}
+            <div className="absolute top-6 left-6 right-6 flex items-center justify-between z-20 text-white pointer-events-auto">
+              <div className="space-y-0.5">
+                <span className="text-[10px] font-label-mono uppercase tracking-widest text-[#666D71] block">
+                  HIGH-RESOLUTION SPECIMEN ({activeImage + 1} OF {images.length})
+                </span>
+                <h4 className="text-base font-bold font-headline-code uppercase tracking-wider">{product.name}</h4>
+              </div>
+              <button
+                onClick={() => setIsFullscreen(false)}
+                className="w-10 h-10 border border-[#262B2E] hover:border-white text-white flex items-center justify-center transition-colors cursor-pointer"
+                title="Close Zoom (Esc)"
+              >
+                <X size={18} />
               </button>
             </div>
 
-            {/* 2. Specs Table Column (Mobile Second / Desktop Left) */}
-            <div className="order-2 sm:order-1 sm:col-span-7 space-y-4 pt-6 sm:pt-0 border-t sm:border-t-0 border-white/10">
-              <h3 className="text-xs font-bold uppercase tracking-widest text-neutral-400 border-b border-white/[0.06] pb-2">
-                Product Details
-              </h3>
-              
-              <div className="space-y-2.5 text-xs">
-                <div className="flex justify-between py-1 border-b border-white/[0.06]">
-                  <span className="text-neutral-500 uppercase font-semibold">Quantity / Set:</span>
-                  <span className="text-white font-bold">{resolvedSpecs.quantity || '1 Set'}</span>
-                </div>
-                {resolvedSpecs.material && (
-                  <div className="flex justify-between py-1 border-b border-white/[0.06]">
-                    <span className="text-neutral-500 uppercase font-semibold">Material:</span>
-                    <span className="text-white font-bold">{resolvedSpecs.material}</span>
-                  </div>
-                )}
-                {resolvedSpecs.type && (
-                  <div className="flex justify-between py-1 border-b border-white/[0.06]">
-                    <span className="text-neutral-500 uppercase font-semibold">Hold Type:</span>
-                    <span className="text-neutral-300 font-medium">{resolvedSpecs.type}</span>
-                  </div>
-                )}
-                {resolvedSpecs.difficulty && (
-                  <div className="flex justify-between py-1 border-b border-white/[0.06]">
-                    <span className="text-neutral-500 uppercase font-semibold">Difficulty:</span>
-                    <span className="text-neutral-300 font-medium">{resolvedSpecs.difficulty}</span>
-                  </div>
-                )}
-                {resolvedSpecs.boltType && (
-                  <div className="flex justify-between py-1 border-b border-white/[0.06]">
-                    <span className="text-neutral-500 uppercase font-semibold">Bolt Insert:</span>
-                    <span className="text-neutral-300 font-medium">{resolvedSpecs.boltType}</span>
-                  </div>
-                )}
-              </div>
+            {/* Lightbox Image Container */}
+            <div
+              className="relative max-w-6xl max-h-[85vh] w-full h-full flex items-center justify-center p-2 sm:p-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <img
+                src={images[activeImage]}
+                alt={`${product.name} zoomed`}
+                className="max-w-full max-h-[85vh] object-contain select-none"
+              />
+
+              {/* Lightbox Arrow Controls */}
+              {images.length > 1 && (
+                <>
+                  <button
+                    onClick={handlePrevImage}
+                    className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 w-11 h-11 border border-[#262B2E] bg-black/80 hover:bg-white text-white hover:text-black flex items-center justify-center transition-colors cursor-pointer"
+                  >
+                    <ChevronLeft size={22} />
+                  </button>
+                  <button
+                    onClick={handleNextImage}
+                    className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 w-11 h-11 border border-[#262B2E] bg-black/80 hover:bg-white text-white hover:text-black flex items-center justify-center transition-colors cursor-pointer"
+                  >
+                    <ChevronRight size={22} />
+                  </button>
+                </>
+              )}
             </div>
-
-          </div>
-
-        </div>
-
-        {/* RELATED PRODUCTS */}
-        {relatedProducts.length > 0 && (
-          <section className="pt-12 border-t border-white/10">
-            <h3 className="text-lg font-bold uppercase tracking-widest text-white mb-8 text-center">
-              You Might Also Like
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-              {relatedProducts.map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
-            </div>
-          </section>
+          </motion.div>
         )}
+      </AnimatePresence>
 
-      </div>
+      {/* 5. ADDED TO MANIFEST NOTIFICATION TOAST */}
+      <AnimatePresence>
+        {addedToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed bottom-20 right-6 z-50 bg-white text-black px-5 py-3 border border-black shadow-2xl flex items-center gap-4 font-label-mono text-xs uppercase"
+          >
+            <span>+ ADDED TO SETTER MANIFEST [{quantity} SET]</span>
+            <button
+              onClick={toggleManifest}
+              className="underline font-bold hover:opacity-75 cursor-pointer"
+            >
+              VIEW TRAY →
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Sticky Bottom Manifest Modal / Tray */}
+      <SetterManifestModal />
     </div>
   );
 }
