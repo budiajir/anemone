@@ -1,103 +1,222 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import Logo from "./Logo";
+
+const footerLinks = {
+  Shop: [
+    { name: "Hold & Macros", path: "/shop?category=Holds" },
+    { name: "Volumes", path: "/shop?category=Volumes" },
+    { name: "Accessories", path: "/shop?category=Accessories" },
+    { name: "Smart Wall Kit", path: "/smart-wall" },
+  ],
+  Company: [
+    { name: "About Us", path: "/about" },
+    { name: "Contact", path: "/contact" },
+    { name: "Shop", path: "/shop" },
+  ],
+  Support: [
+    { name: "FAQ", path: "/contact" },
+    { name: "Shipping", path: "/contact" },
+    { name: "Returns", path: "/contact" },
+  ],
+};
+
+const socialIcons = [
+  {
+    name: "Instagram",
+    href: "https://www.instagram.com/anemonegrip/",
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
+        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+        <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+      </svg>
+    ),
+  },
+  {
+    name: "WhatsApp",
+    href: "https://wa.me/628569044778",
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+      </svg>
+    ),
+  },
+  {
+    name: "Email",
+    href: "mailto:anemone@anemonegrip.com",
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <rect width="20" height="16" x="2" y="4" rx="2"/>
+        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+      </svg>
+    ),
+  },
+];
 
 export default function Footer() {
   return (
-    <footer className="w-full bg-black border-t border-[#262B2E] text-white">
-      <div className="w-full px-6 lg:px-12 py-12 lg:py-16">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 border-b border-[#262B2E] pb-12">
-          
-          {/* Column 1: ANEMONE HOLD ARCHITECTURE */}
-          <div className="flex flex-col gap-3">
-            <span className="font-nav-caps text-sm uppercase tracking-wider text-white font-bold">
-              ANEMONE HOLD ARCHITECTURE
-            </span>
-            <p className="font-body-sm text-xs leading-relaxed text-[#666D71] max-w-sm">
-              Radical geometric restraint for high-level commercial routesetting and architectural climbing installations. Engineered under Swiss laboratory precision standards.
-            </p>
-            <div className="mt-2">
-              <span className="inline-flex items-center font-label-mono text-[10px] text-white bg-[#1b1b1b] border border-[#262B2E] px-3 py-1 rounded-full uppercase tracking-wider">
-                SPEC GRADE: PE / PU / FIBERGLASS
-              </span>
+    <footer className="relative z-10">
+
+      {/* ========== MOBILE FOOTER (Elite Exped Style) ========== */}
+      <div className="md:hidden bg-[#1a1a1a]">
+        <div className="max-w-lg mx-auto px-8 pt-14 pb-10">
+
+          {/* Two-Column Link Grid (2x2 Balanced: Shop, Company, Support with FAQ, Inquiries) */}
+          <div className="grid grid-cols-2 gap-x-8 gap-y-8">
+            {Object.entries(footerLinks).map(([title, links]) => (
+              <div key={title} className="space-y-4">
+                <h4 className="text-white text-base font-bold tracking-wide">
+                  {title}
+                </h4>
+                <ul className="space-y-3">
+                  {links.map((link) => (
+                    <li key={link.name}>
+                      <Link
+                        to={link.path}
+                        className="text-neutral-400 hover:text-white text-sm transition-colors"
+                      >
+                        {link.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+
+            {/* Inquiries / Direct Contact Column */}
+            <div className="space-y-4">
+              <h4 className="text-white text-base font-bold tracking-wide">
+                Inquiries
+              </h4>
+              <ul className="space-y-3 text-sm text-neutral-400">
+                <li>
+                  <a
+                    href="https://wa.me/628569044778"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-white transition-colors"
+                  >
+                    +62 856 9044 778
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="mailto:anemone@anemonegrip.com"
+                    className="hover:text-white transition-colors"
+                  >
+                    anemone@anemonegrip.com
+                  </a>
+                </li>
+                <li className="text-neutral-500 text-xs">
+                  Bandung, Indonesia
+                </li>
+              </ul>
             </div>
           </div>
 
-          {/* Column 2: B2B LOGISTICS & ASSETS */}
-          <div className="flex flex-col gap-3">
-            <span className="font-label-mono text-xs text-[#666D71] uppercase tracking-wider">
-              B2B LOGISTICS &amp; ASSETS
-            </span>
-            <div className="flex flex-col gap-2 font-label-mono text-xs">
+          {/* Social Icons Row */}
+          <div className="flex items-center justify-center gap-8 pt-12 pb-10">
+            {socialIcons.map((social) => (
               <a
-                href="/shop"
-                className="inline-flex items-center justify-between border-b border-[#262B2E] pb-2 text-white hover:text-neutral-400 transition-colors"
-              >
-                <span>EXPORT PDF SPEC SHEET (2026)</span>
-                <span className="text-[#666D71]">↓ [24MB]</span>
-              </a>
-              <Link
-                to="/shop"
-                className="inline-flex items-center justify-between border-b border-[#262B2E] pb-2 text-white hover:text-neutral-400 transition-colors"
-              >
-                <span>COMMERCIAL BATCH DISPATCH</span>
-                <span className="text-[#666D71]">→ VIEW</span>
-              </Link>
-              <Link
-                to="/about"
-                className="inline-flex items-center justify-between border-b border-[#262B2E] pb-2 text-white hover:text-neutral-400 transition-colors"
-              >
-                <span>SURFACE FRICTION DATA (ISO)</span>
-                <span className="text-[#666D71]">→ TECH</span>
-              </Link>
-            </div>
-          </div>
-
-          {/* Column 3: DIRECT ROUTE-SETTER DESK */}
-          <div className="flex flex-col gap-3">
-            <span className="font-label-mono text-xs text-[#666D71] uppercase tracking-wider">
-              DIRECT ROUTE-SETTER DESK
-            </span>
-            <p className="font-body-sm text-xs text-[#666D71] leading-relaxed max-w-sm">
-              Immediate support for competition setters, gym deliveries, and project volume calculations.
-            </p>
-            <div className="flex flex-col gap-2 mt-1">
-              <a
-                className="inline-flex items-center justify-center rounded-full border border-white px-6 py-2 font-label-mono text-xs uppercase tracking-wider text-white hover:bg-white hover:text-black transition-all duration-200"
-                href="https://wa.me/628569044778"
-                rel="noopener noreferrer"
+                key={social.name}
+                href={social.href}
                 target="_blank"
+                rel="noopener noreferrer"
+                className="text-neutral-500 hover:text-white transition-colors"
+                aria-label={social.name}
               >
-                <span className="font-label-mono font-semibold">WHATSAPP</span>
+                {social.icon}
               </a>
-              <span className="font-label-mono text-[10px] text-[#666D71] text-center tracking-wider uppercase">
-                DISPATCH: BANDUNG / INDONESIA
-              </span>
-            </div>
+            ))}
           </div>
 
-        </div>
+          {/* Divider */}
+          <div className="border-t border-white/15" />
 
-        {/* Bottom Bar */}
-        <div className="pt-6 flex flex-col md:flex-row items-center justify-between gap-4 font-label-mono text-[11px] text-[#666D71]">
-          <div>
-            © 2026 ANEMONE GRIPS LABORATORY. ALL RIGHTS RESERVED.
+          {/* Bottom Links */}
+          <div className="flex flex-col items-center gap-3 pt-8 pb-4">
+            <a href="#" className="text-neutral-400 hover:text-white text-sm transition-colors">Terms & Conditions</a>
+            <a href="#" className="text-neutral-400 hover:text-white text-sm transition-colors">Privacy Policy</a>
           </div>
-          <div className="flex items-center gap-6">
-            <Link to="/about" className="hover:text-white transition-colors">
-              LEGAL / COMPLIANCE
-            </Link>
-            <a
-              href="https://www.instagram.com/anemonegrip/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-white transition-colors"
-            >
-              INSTAGRAM
-            </a>
-            <span className="text-white font-semibold">SWISS ENGINEERED</span>
+
+          {/* Copyright & Made In */}
+          <div className="flex flex-col items-center gap-2 pt-4 pb-2 text-center">
+            <p className="text-neutral-500 text-xs">© 2026 Anemone Climbing Holds</p>
+            <p className="text-neutral-500 text-xs">
+              Made in <span className="text-white font-semibold">Bandung</span>
+            </p>
           </div>
         </div>
       </div>
+
+      {/* ========== DESKTOP FOOTER (Original Style) ========== */}
+      <div className="hidden md:block border-t border-white/10 bg-black">
+        <div className="max-w-7xl mx-auto px-6 md:px-8 py-16 md:py-24">
+          <div className="grid grid-cols-12 gap-y-12 gap-x-12">
+
+            {/* Column 1: Brand + Description + Socials */}
+            <div className="col-span-4 space-y-6">
+              <Link to="/" className="inline-block hover:opacity-90 transition-opacity">
+                <Logo className="h-10 sm:h-12" />
+              </Link>
+              <p className="text-neutral-400 text-sm leading-relaxed font-light max-w-xs">
+                Premium climbing holds, macros, volumes, and smart wall technology — built by climbers, for climbers.
+              </p>
+              <div className="flex items-center gap-5 pt-2">
+                {socialIcons.map((social) => (
+                  <a
+                    key={social.name}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-neutral-600 hover:text-white transition-colors"
+                    aria-label={social.name}
+                  >
+                    {social.icon}
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            {/* Columns 2-4: Link Groups */}
+            <div className="col-span-8 grid grid-cols-3 gap-y-10 gap-x-8">
+              {Object.entries(footerLinks).map(([title, links]) => (
+                <div key={title} className="space-y-5">
+                  <h4 className="text-white text-xs font-bold uppercase tracking-widest">
+                    {title}
+                  </h4>
+                  <ul className="space-y-3">
+                    {links.map((link) => (
+                      <li key={link.name}>
+                        <Link
+                          to={link.path}
+                          className="text-neutral-500 hover:text-white uppercase text-xs tracking-wider transition-colors"
+                        >
+                          {link.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Desktop Bottom Bar */}
+        <div className="border-t border-white/[0.06]">
+          <div className="max-w-7xl mx-auto px-6 md:px-8 py-6 flex items-center justify-between gap-4 text-xs text-neutral-600 font-light">
+            <p>© 2026 Anemone. All rights reserved.</p>
+            <div className="flex items-center gap-6">
+              <a href="#" className="hover:text-white transition-colors uppercase tracking-wider">Privacy</a>
+              <a href="#" className="hover:text-white transition-colors uppercase tracking-wider">Terms</a>
+              <a href="#" className="hover:text-white transition-colors uppercase tracking-wider">Sitemap</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </footer>
   );
 }
