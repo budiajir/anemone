@@ -2,6 +2,10 @@ import { create } from "zustand";
 
 export const useCartStore = create((set, get) => ({
   items: [],
+  manifestOpen: false,
+
+  setManifestOpen: (isOpen) => set({ manifestOpen: isOpen }),
+  toggleManifest: () => set((state) => ({ manifestOpen: !state.manifestOpen })),
 
   addItem: (product, selectedVariants = {}, quantity = 1) => {
     if (!product?.id) return;

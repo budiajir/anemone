@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
@@ -6,7 +6,6 @@ import Shop from "./pages/Shop";
 import ProductDetail from "./pages/ProductDetail";
 import SmartWall from "./pages/SmartWall";
 import Dashboard from "./pages/Dashboard";
-import Cart from "./pages/Cart";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Checkout from "./pages/Checkout";
@@ -28,16 +27,23 @@ import ErrorBoundary from "./components/ErrorBoundary";
 
 // Public site layout wrapper
 function ClientLayout() {
+  const location = useLocation();
+  const isShopOrProduct =
+    location.pathname.startsWith("/shop") ||
+    location.pathname.startsWith("/catalog") ||
+    location.pathname.startsWith("/product") ||
+    location.pathname === "/macros";
+
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col pb-16 md:pb-0">
+    <div className={`min-h-screen flex flex-col ${isShopOrProduct ? "bg-surface text-on-surface" : "bg-black text-white pb-16 md:pb-0"}`}>
       <Navbar />
       <main className="flex-grow">
         <Outlet />
       </main>
-      <CatalogDownloadBanner />
+      {!isShopOrProduct && <CatalogDownloadBanner />}
       <Footer />
       {/* Mobile-Only Sticky Floating Contact Bar */}
-      <MobileStickyContactBar />
+      {!isShopOrProduct && <MobileStickyContactBar />}
     </div>
   );
 }
@@ -51,11 +57,12 @@ export default function App() {
         <Route element={<ClientLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/shop" element={<Shop />} />
+          <Route path="/catalog" element={<Shop />} />
           <Route path="/macros" element={<Shop />} />
           <Route path="/product/:slug" element={<ProductDetail />} />
           <Route path="/smart-wall" element={<SmartWall />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/cart" element={<Cart />} />
+          <Route path="/cart" element={<Shop />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/checkout" element={<Checkout />} />
