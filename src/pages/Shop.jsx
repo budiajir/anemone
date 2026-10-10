@@ -1,47 +1,48 @@
-import React, { useState, useMemo, useEffect } from "react";
-import { useSearchParams, useLocation } from "react-router-dom";
-import { Loader2 } from "lucide-react";
-import ProductCard from "../components/ProductCard";
-import SetterManifestModal from "../components/SetterManifestModal";
-import { categories } from "../data/products";
-import { getProducts } from "../services/api";
+import React, { useState, useMemo, useEffect } from 'react';
+import { useSearchParams, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { SlidersHorizontal, ChevronDown, Check, Loader2 } from 'lucide-react';
+import ProductCard from '../components/ProductCard';
+import { categories } from '../data/products';
+import { getProducts } from '../services/api';
+import { useProductsStore } from '../store/productsStore';
 
 export default function Shop() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const location = useLocation();
+  const [sortBy, setSortBy] = useState('newest');
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   // API State
   const [productsList, setProductsList] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Filter States
-  const [selectedMaterial, setSelectedMaterial] = useState("all");
-  const [selectedType, setSelectedType] = useState("all");
-  const [selectedBolt, setSelectedBolt] = useState("all");
+  const filterCategories = ['All', ...categories];
+  const location = useLocation();
+  const allProducts = useProductsStore((s) => s.products) || [];
 
-  // Category from URL or route
+  // Active category filter state synced with URL search params or route path (/macros)
   const activeCategory = useMemo(() => {
-    const categoryParam = searchParams.get("category");
+    const categoryParam = searchParams.get('category');
     if (categoryParam) {
       const found = categories.find((c) => c.toLowerCase() === categoryParam.toLowerCase());
       if (found) return found;
     }
-    if (location.pathname === "/macros") return "Macros";
-    return "All";
+    if (location.pathname === '/macros') return 'Macros';
+    return 'All';
   }, [searchParams, location.pathname]);
 
-  // Fetch catalog from API / Supabase
+  // Fetch products from API / productsStore
   useEffect(() => {
     let isMounted = true;
     async function fetchCatalog() {
       setLoading(true);
       try {
-        const data = await getProducts(activeCategory === "All" ? "" : activeCategory);
+        const data = await getProducts(activeCategory);
         if (isMounted) {
-          setProductsList(data || []);
+          setProductsList(data);
         }
       } catch (err) {
-        console.error("Error loading products:", err);
+        console.error('Error loading products:', err);
       } finally {
         if (isMounted) {
           setLoading(false);
@@ -54,301 +55,193 @@ export default function Shop() {
     };
   }, [activeCategory]);
 
-  const handleCategoryChange = (cat) => {
-    if (cat === "All" || cat === "all") {
-      searchParams.delete("category");
+  const handleCategoryChange = (category) => {
+    if (category === 'All') {
+      searchParams.delete('category');
     } else {
-      searchParams.set("category", cat);
+      searchParams.set('category', category);
     }
     setSearchParams(searchParams);
+    setMobileFilterOpen(false);
   };
 
-  const resetFilters = () => {
-    searchParams.delete("category");
-    setSearchParams(searchParams);
-    setSelectedMaterial("all");
-    setSelectedType("all");
-    setSelectedBolt("all");
-  };
-
-  const isFiltered =
-    activeCategory !== "All" ||
-    selectedMaterial !== "all" ||
-    selectedType !== "all" ||
-    selectedBolt !== "all";
-
-  // Filtered Products
   const filteredProducts = useMemo(() => {
-    return productsList.filter((product) => {
-      const pMat = (product.material || "").toLowerCase();
-      const pSpecs = product.specs || {};
-      const pType = (pSpecs.type || "").toLowerCase();
-      const pBolt = (pSpecs.boltType || "").toLowerCase();
+    let items = [...productsList];
 
-      if (selectedMaterial !== "all" && !pMat.includes(selectedMaterial.toLowerCase())) {
-        return false;
-      }
-      if (selectedType !== "all" && !pType.includes(selectedType.toLowerCase())) {
-        return false;
-      }
-      if (selectedBolt !== "all" && !pBolt.includes(selectedBolt.toLowerCase())) {
-        return false;
-      }
-      return true;
-    });
-  }, [productsList, selectedMaterial, selectedType, selectedBolt]);
+    if (sortBy === 'price-asc') {
+      items.sort((a, b) => a.price - b.price);
+    } else if (sortBy === 'price-desc') {
+      items.sort((a, b) => b.price - a.price);
+    } else if (sortBy === 'newest') {
+      items.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    }
+
+    return items;
+  }, [productsList, sortBy]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [activeCategory]);
 
   return (
-    <div className="bg-surface text-on-surface min-h-screen">
-      <main className="w-full pt-16 bg-surface min-h-[calc(100vh-16rem)]">
-        <div className="flex flex-col w-full">
-          
-          {/* Minimalist Title Section (Flathold Editorial Heritage) */}
-          <section className="w-full pt-12 pb-8 md:pt-16 md:pb-12 px-6 flex flex-col items-center justify-center text-center">
-            <div className="inline-flex items-center gap-2 font-label-mono text-[11px] text-text-muted uppercase tracking-widest mb-2">
-              <span>SYS.24</span>
-              <span>•</span>
-              <span>OFFICIAL IFSC PRODUCER</span>
-              <span>•</span>
-              <span>BANDUNG / INDONESIA</span>
-            </div>
-            <h1 className="font-headline-xl text-4xl sm:text-6xl md:text-7xl text-primary tracking-tight font-normal leading-none uppercase">
-              {activeCategory === "All" ? "Macros & Series" : activeCategory}
+    <div className="bg-black text-white min-h-screen pb-24" style={{ paddingTop: '160px' }}>
+      <div style={{ maxWidth: '1280px' }} className="mx-auto w-full px-6 md:px-12 space-y-10">
+        
+        {/* CENTERED EDITORIAL HEADER */}
+        <header className="border-b border-white/10 pb-8 space-y-6 text-center">
+          <div className="flex flex-col items-center justify-center space-y-2">
+            <span className="text-neutral-500 text-xs font-bold tracking-[0.3em] uppercase block">
+              Catalog &amp; Inventory
+            </span>
+            <h1 className="text-4xl sm:text-6xl md:text-7xl font-black uppercase tracking-tight text-white font-sans">
+              {activeCategory === 'All' ? 'All Products' : activeCategory}
             </h1>
-            <p className="mt-3 font-body-sm text-xs sm:text-sm text-text-muted max-w-xl text-center leading-relaxed">
-              Dual-texture fiberglass volumes and high-density polyurethane geometries engineered for commercial setting dynamics and World Cup circuit compliance.
-            </p>
-          </section>
+          </div>
 
-          {/* Precision Filter Bar (1:1 Flathold Minimalist Spec Selector) */}
-          <section className="w-full border-t border-b border-hairline-border bg-surface-container-lowest sticky top-16 z-30 transition-shadow duration-200">
-            <div className="max-w-7xl mx-auto px-6 py-3 flex flex-wrap items-center justify-between gap-y-3 gap-x-6 text-primary">
-              
-              {/* Filter Dropdowns */}
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 font-label-mono text-xs">
-                
-                {/* Category / Series Families */}
-                <div className="flex items-center gap-2">
-                  <span className="text-text-muted whitespace-nowrap">Series families :</span>
-                  <div className="relative inline-block">
-                    <select
-                      value={activeCategory.toLowerCase()}
-                      onChange={(e) => handleCategoryChange(e.target.value)}
-                      className="appearance-none bg-transparent border border-primary rounded-full px-3 py-1 pr-6 text-primary focus:outline-none focus:bg-surface-container-low transition-colors cursor-pointer text-xs uppercase tracking-wider font-label-mono"
-                    >
-                      <option value="all">ALL</option>
-                      {categories.map((c) => (
-                        <option key={c} value={c.toLowerCase()}>{c}</option>
-                      ))}
-                    </select>
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-primary text-[10px]">↓</span>
-                  </div>
-                </div>
-
-                {/* Material Filter */}
-                <div className="flex items-center gap-2">
-                  <span className="text-text-muted whitespace-nowrap">Material :</span>
-                  <div className="relative inline-block">
-                    <select
-                      value={selectedMaterial}
-                      onChange={(e) => setSelectedMaterial(e.target.value)}
-                      className="appearance-none bg-transparent border border-primary rounded-full px-3 py-1 pr-6 text-primary focus:outline-none focus:bg-surface-container-low transition-colors cursor-pointer text-xs uppercase tracking-wider font-label-mono"
-                    >
-                      <option value="all">ALL</option>
-                      <option value="fiberglass">Fiberglass (Macros)</option>
-                      <option value="pu">PU (Polyurethane)</option>
-                    </select>
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-primary text-[10px]">↓</span>
-                  </div>
-                </div>
-
-                {/* Hold Profile / Type Filter */}
-                <div className="flex items-center gap-2">
-                  <span className="text-text-muted whitespace-nowrap">Profile :</span>
-                  <div className="relative inline-block">
-                    <select
-                      value={selectedType}
-                      onChange={(e) => setSelectedType(e.target.value)}
-                      className="appearance-none bg-transparent border border-primary rounded-full px-3 py-1 pr-6 text-primary focus:outline-none focus:bg-surface-container-low transition-colors cursor-pointer text-xs uppercase tracking-wider font-label-mono"
-                    >
-                      <option value="all">ALL</option>
-                      <option value="sloper">Sloper &amp; Jug</option>
-                      <option value="pinch">Pinch</option>
-                      <option value="crimp">Crimp</option>
-                      <option value="mini jug">Mini Jug</option>
-                    </select>
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-primary text-[10px]">↓</span>
-                  </div>
-                </div>
-
-                {/* Bolt Insert Filter */}
-                <div className="flex items-center gap-2">
-                  <span className="text-text-muted whitespace-nowrap">Bolt :</span>
-                  <div className="relative inline-block">
-                    <select
-                      value={selectedBolt}
-                      onChange={(e) => setSelectedBolt(e.target.value)}
-                      className="appearance-none bg-transparent border border-primary rounded-full px-3 py-1 pr-6 text-primary focus:outline-none focus:bg-surface-container-low transition-colors cursor-pointer text-xs uppercase tracking-wider font-label-mono"
-                    >
-                      <option value="all">ALL</option>
-                      <option value="screw-on">Screw-on</option>
-                      <option value="m10">M10 Allen</option>
-                    </select>
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-primary text-[10px]">↓</span>
-                  </div>
-                </div>
-
-              </div>
-
-              {/* Quick Index Count & Reset */}
-              <div className="flex items-center gap-4 font-label-mono text-xs">
-                <span className="text-text-muted uppercase">
-                  SHOWING {filteredProducts.length} / {productsList.length} SPECS
-                </span>
-                {isFiltered && (
-                  <button
-                    type="button"
-                    onClick={resetFilters}
-                    className="text-primary underline hover:text-secondary uppercase cursor-pointer"
-                  >
-                    RESET
-                  </button>
-                )}
-              </div>
-
-            </div>
-          </section>
-
-          {/* 4-Column Continuous Hairline Matrix (Direct Flathold Aesthetic) */}
-          <section className="w-full bg-surface-container-lowest">
-            {loading ? (
-              <div className="py-32 flex flex-col items-center justify-center text-center space-y-4">
-                <Loader2 size={36} className="text-primary animate-spin" />
-                <p className="font-label-mono text-xs uppercase tracking-widest text-text-muted">
-                  Loading Spec Matrix...
-                </p>
-              </div>
-            ) : filteredProducts.length > 0 ? (
-              <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-                {filteredProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
-            ) : (
-              <div className="py-28 px-6 text-center space-y-4 max-w-lg mx-auto">
-                <span className="font-label-mono text-xs uppercase tracking-widest text-text-muted block">
-                  ZERO MATCHES FOUND
-                </span>
-                <h3 className="font-headline-code text-2xl font-bold text-primary uppercase">
-                  Tidak Ada Produk yang Sesuai Filter
-                </h3>
-                <p className="font-body-sm text-xs text-text-muted leading-relaxed">
-                  Coba ubah kriteria filter material atau profil pegangan, atau tekan tombol reset untuk kembali melihat seluruh inventaris.
-                </p>
+          {/* DESKTOP CENTERED CATEGORY FILTER CHIPS */}
+          <div className="hidden md:flex flex-wrap items-center justify-center gap-2 pt-2">
+            {filterCategories.map((cat) => {
+              const isActive = activeCategory.toLowerCase() === cat.toLowerCase();
+              return (
                 <button
-                  type="button"
-                  onClick={resetFilters}
-                  className="bg-primary text-on-primary px-6 py-2.5 rounded-full font-label-mono text-xs uppercase tracking-wider hover:bg-secondary transition-colors cursor-pointer"
+                  key={cat}
+                  onClick={() => handleCategoryChange(cat)}
+                  className={`px-5 py-2.5 rounded text-xs font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+                    isActive
+                      ? 'bg-white text-black font-black shadow-md'
+                      : 'bg-neutral-950 border border-white/10 text-neutral-400 hover:text-white hover:border-white/30'
+                  }`}
                 >
-                  RESET FILTER
+                  {cat}
                 </button>
-              </div>
-            )}
-          </section>
+              );
+            })}
+          </div>
 
-          {/* Technical Material Index Matrix (Laboratory Precision) */}
-          <section className="w-full bg-surface-concrete py-16 lg:py-20 border-t border-hairline-border px-6 lg:px-12">
-            <div className="max-w-7xl mx-auto space-y-12">
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                <div>
-                  <span className="font-label-mono text-xs text-text-muted uppercase tracking-widest">
-                    SPECIFICATION COMPLIANCE
-                  </span>
-                  <h2 className="font-headline-lg text-2xl sm:text-3xl font-bold text-primary mt-1">
-                    Material Integrity &amp; Friction Grain
-                  </h2>
-                </div>
-                <p className="font-body-sm text-xs text-text-muted max-w-md leading-relaxed">
-                  Every Anemone volume is cast under controlled pressure to prevent void bubbles, and finished with precision grit dispersion according to DIN 18032 friction standards.
-                </p>
-              </div>
-
-              {/* 3 Tech Spec Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-label-mono text-xs">
-                
-                {/* Tech 1 */}
-                <div className="bg-surface-container-lowest border border-hairline-border p-6 sm:p-8 flex flex-col justify-between space-y-6">
-                  <div>
-                    <div className="flex items-center justify-between text-text-muted text-[10px] pb-3 border-b border-hairline-border uppercase">
-                      <span>TECH.01</span>
-                      <span className="font-semibold text-primary">COMPLIANT IFSC</span>
-                    </div>
-                    <h3 className="font-headline-code text-xl font-bold text-primary mt-4">
-                      Dual-Tex Fiberglass
-                    </h3>
-                    <p className="font-body-sm text-xs text-text-muted mt-2 leading-relaxed">
-                      Ultra-light hollow construction for competition macros. Combines high-gloss low-drag zero-step coating with 280-mesh micro-quartz perimeter holds.
-                    </p>
-                  </div>
-                  <div className="pt-4 border-t border-hairline-border flex items-center justify-between text-[11px] text-text-muted">
-                    <span>DENSITY: 1.45 G/CM³</span>
-                    <span className="text-primary font-medium">NO WALL DAMAGE</span>
-                  </div>
-                </div>
-
-                {/* Tech 2 */}
-                <div className="bg-surface-container-lowest border border-hairline-border p-6 sm:p-8 flex flex-col justify-between space-y-6">
-                  <div>
-                    <div className="flex items-center justify-between text-text-muted text-[10px] pb-3 border-b border-hairline-border uppercase">
-                      <span>TECH.02</span>
-                      <span className="font-semibold text-primary">SWISS POLYMER</span>
-                    </div>
-                    <h3 className="font-headline-code text-xl font-bold text-primary mt-4">
-                      Dannomond PU Pure
-                    </h3>
-                    <p className="font-body-sm text-xs text-text-muted mt-2 leading-relaxed">
-                      High fracture-toughness thermoset polymer. Unmatched washer seating strength with zero flex under extreme commercial impact loads.
-                    </p>
-                  </div>
-                  <div className="pt-4 border-t border-hairline-border flex items-center justify-between text-[11px] text-text-muted">
-                    <span>IMPACT: &gt;32 KJ/M²</span>
-                    <span className="text-primary font-medium">100% COLOR STABLE</span>
-                  </div>
-                </div>
-
-                {/* Tech 3 */}
-                <div className="bg-surface-container-lowest border border-hairline-border p-6 sm:p-8 flex flex-col justify-between space-y-6">
-                  <div>
-                    <div className="flex items-center justify-between text-text-muted text-[10px] pb-3 border-b border-hairline-border uppercase">
-                      <span>TECH.03</span>
-                      <span className="font-semibold text-primary">PATENTED INSERT</span>
-                    </div>
-                    <h3 className="font-headline-code text-xl font-bold text-primary mt-4">
-                      Dual-Fixation System
-                    </h3>
-                    <p className="font-body-sm text-xs text-text-muted mt-2 leading-relaxed">
-                      Reinforced stainless steel bushings integrated flush with the hold base. Engineered for rapid cordless impact-wrench route-setting rotations.
-                    </p>
-                  </div>
-                  <div className="pt-4 border-t border-hairline-border flex items-center justify-between text-[11px] text-text-muted">
-                    <span>TORQUE MAX: 45 NM</span>
-                    <span className="text-primary font-medium">EN 12572-3</span>
-                  </div>
-                </div>
-
-              </div>
+          {/* CENTERED SORT & ITEM COUNT CONTROLS */}
+          <div className="flex items-center justify-center gap-4 pt-1">
+            <div className="relative">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="bg-neutral-950 border border-white/10 text-white text-xs font-bold uppercase tracking-wider px-4 py-2 rounded appearance-none pr-8 cursor-pointer focus:border-white/40 outline-none"
+              >
+                <option value="newest" className="bg-neutral-950">Sort: Newest</option>
+                <option value="price-asc" className="bg-neutral-950">Price: Low to High</option>
+                <option value="price-desc" className="bg-neutral-950">Price: High to Low</option>
+              </select>
+              <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
             </div>
-          </section>
+            <p className="text-neutral-500 text-xs font-semibold uppercase tracking-widest">
+              {filteredProducts.length} items
+            </p>
+          </div>
 
-        </div>
-      </main>
+          {/* MOBILE CATEGORY DROPDOWN SELECTOR */}
+          <div className="md:hidden pt-2">
+            <button
+              onClick={() => setMobileFilterOpen(!mobileFilterOpen)}
+              className="w-full flex items-center justify-between px-5 py-3.5 bg-neutral-950 border border-white/10 rounded text-xs font-bold uppercase tracking-wider text-neutral-200"
+            >
+              <span className="flex items-center gap-2">
+                <SlidersHorizontal size={14} className="text-white" />
+                Category: {activeCategory}
+              </span>
+              <ChevronDown size={16} className={`transition-transform duration-200 ${mobileFilterOpen ? 'rotate-180' : ''}`} />
+            </button>
 
-      {/* Route Setter Floating B2B Inquiry Bar & Modal */}
-      <SetterManifestModal />
+            <AnimatePresence>
+              {mobileFilterOpen && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden bg-neutral-950 border border-white/10 rounded p-3 mt-2 space-y-1"
+                >
+                  {filterCategories.map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => handleCategoryChange(cat)}
+                      className={`w-full text-left px-4 py-3 rounded text-xs font-bold uppercase tracking-wider flex items-center justify-between ${
+                        activeCategory.toLowerCase() === cat.toLowerCase() ? 'bg-white/10 text-white font-bold' : 'text-neutral-400'
+                      }`}
+                    >
+                      <span>{cat}</span>
+                      {activeCategory.toLowerCase() === cat.toLowerCase() && <Check size={16} className="text-white" />}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </header>
+
+        {/* PRODUCT GRID */}
+        {loading ? (
+          <div className="py-24 flex flex-col items-center justify-center text-center space-y-4">
+            <Loader2 size={40} className="text-white animate-spin" />
+            <p className="text-xs uppercase font-bold tracking-widest text-neutral-400">
+              Loading Product Catalog...
+            </p>
+          </div>
+        ) : (
+          <motion.div 
+            layout
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10"
+          >
+            <AnimatePresence mode="popLayout">
+              {filteredProducts.length > 0 ? (
+                filteredProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))
+              ) : (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="col-span-full py-20 bg-neutral-950 border border-white/10 rounded-lg text-center flex flex-col items-center justify-center space-y-4 px-6 w-full"
+                >
+                  <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mx-auto text-neutral-400">
+                    <SlidersHorizontal size={22} />
+                  </div>
+                  <div className="space-y-2 text-center flex flex-col items-center justify-center w-full">
+                    <h3 className="font-black uppercase tracking-widest text-lg text-white text-center w-full">
+                      {activeCategory.toUpperCase()} COLLECTION — COMING SOON
+                    </h3>
+                    {(() => {
+                      const availableCategories = [...new Set(allProducts.map(p => p.category))].filter(Boolean);
+                      if (availableCategories.length > 0) {
+                        const categoryNames = availableCategories.join(' & ');
+                        const firstAvailable = availableCategories[0];
+                        return (
+                          <>
+                            <p className="text-xs text-neutral-400 font-light max-w-md text-center leading-relaxed mx-auto">
+                              Koleksi {activeCategory} batch 2026 sedang dalam tahap akhir presisi shaping &amp; pengujian. Lihat koleksi <span className="text-white font-semibold">{categoryNames}</span> yang sudah resmi rilis.
+                            </p>
+                            <div className="pt-2 flex justify-center w-full">
+                              <button
+                                onClick={() => handleCategoryChange(firstAvailable)}
+                                className="bg-white text-black font-black text-xs uppercase tracking-widest px-6 py-3 rounded hover:bg-neutral-200 transition-colors cursor-pointer"
+                              >
+                                LIHAT PRODUK {categoryNames.toUpperCase()}
+                              </button>
+                            </div>
+                          </>
+                        );
+                      }
+                      return (
+                        <p className="text-xs text-neutral-400 font-light max-w-md text-center leading-relaxed mx-auto">
+                          Koleksi {activeCategory} batch 2026 sedang dalam tahap akhir presisi shaping &amp; pengujian.
+                        </p>
+                      );
+                    })()}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        )}
+
+      </div>
     </div>
   );
 }

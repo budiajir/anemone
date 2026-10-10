@@ -1,25 +1,26 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Loader2, Maximize2, X, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useCartStore } from '../store/cartStore';
-import { formatPrice } from '../data/products';
+import { ChevronLeft, ChevronRight, Maximize2, ArrowLeft, Loader2, Minus, Plus, X } from 'lucide-react';
+import { formatPrice, defaultHoldColors } from '../data/products';
 import ProductCard from '../components/ProductCard';
-import SetterManifestModal from '../components/SetterManifestModal';
 import { getProductBySlug, getProducts } from '../services/api';
 
-const ifscColorMap = {
-  black: { bg: '#171717', name: 'BLACK / DUAL-TEX MATTE-GLOSS' },
-  blue: { bg: '#1b449c', name: 'COBALT BLUE (RAL 5002)' },
-  red: { bg: '#c01d24', name: 'SIGNAL RED (RAL 3001)' },
-  yellow: { bg: '#f6b700', name: 'BRIGHT YELLOW (RAL 1023)' },
-  green: { bg: '#48a23f', name: 'ACID GREEN (RAL 6018)' },
-  white: { bg: '#ffffff', border: true, name: 'PURE WHITE (RAL 9010)' },
-  orange: { bg: '#f97316', name: 'MANDARIN ORANGE (RAL 2004)' },
-  purple: { bg: '#7e22ce', name: 'DEEP PURPLE (RAL 4005)' },
-  pink: { bg: '#ec4899', name: 'FLUOR PINK' },
-  grey: { bg: '#6b7280', name: 'BASALT GREY' },
-  cyan: { bg: '#06b6d4', name: 'IFSC CYAN' },
+const colorMap = {
+  red: "#ef4444",
+  blue: "#2563eb",
+  yellow: "#eab308",
+  green: "#10b981",
+  orange: "#f97316",
+  purple: "#a855f7",
+  pink: "#ec4899",
+  black: "#171717",
+  white: "#f8fafc",
+  grey: "#6b7280",
+  gray: "#6b7280",
+  cyan: "#06b6d4",
+  tosca: "#0d9488",
+  turquoise: "#06b6d4",
 };
 
 function resolveProductSpecs(product) {
@@ -27,39 +28,44 @@ function resolveProductSpecs(product) {
   const specs = product.specs || {};
   const desc = (product.shortDescription || product.short_description || product.description || '').toLowerCase();
   const cat = (product.category || '').toLowerCase();
-  const isMacro = cat === 'macros';
+  const isHoldLike = cat === 'holds' || cat === 'macros' || cat === 'volumes';
 
+  // Quantity
   let quantity = specs.quantity;
   if (!quantity) {
     const qtyMatch = desc.match(/(\d+)\s*(pcs|buah|set)/i);
-    quantity = qtyMatch ? `${qtyMatch[1]} Pcs` : (isMacro ? '7 Pcs' : '1 Set');
+    quantity = qtyMatch ? `${qtyMatch[1]} Pcs` : (cat === 'macros' ? '7 Pcs' : '1 Set');
   }
 
-  const material = product.material || specs.material || (isMacro ? 'Fiberglass (Dual-Tex)' : 'Dannomond PU Pure');
+  // Material
+  const material = product.material || specs.material || (cat === 'macros' ? 'Fiberglass' : 'PU');
 
+  // Hold Type
   let type = specs.type;
-  if (!type) {
+  if (!type && isHoldLike) {
     if (desc.includes('pinch')) type = 'Pinch';
     else if (desc.includes('sloper')) type = 'Sloper & Jug';
     else if (desc.includes('crimp')) type = 'Crimp';
     else if (desc.includes('jug')) type = 'Mini Jug & Crimp';
     else if (desc.includes('pocket')) type = 'Pocket';
-    else type = isMacro ? 'Sloper & Jug' : 'Mini Jug & Crimp';
+    else type = cat === 'macros' ? 'Pinch' : 'Mini Jug & Crimp';
   }
 
+  // Difficulty
   let difficulty = specs.difficulty;
-  if (!difficulty) {
+  if (!difficulty && isHoldLike) {
     if (desc.includes('easy - medium') || desc.includes('easy-medium')) difficulty = 'Easy - Medium';
     else if (desc.includes('medium - hard') || desc.includes('medium-hard')) difficulty = 'Medium - Hard';
     else if (desc.includes('medium')) difficulty = 'Medium';
     else if (desc.includes('easy')) difficulty = 'Easy';
     else if (desc.includes('hard')) difficulty = 'Hard';
-    else difficulty = isMacro ? 'Medium' : 'Medium - Hard';
+    else difficulty = cat === 'macros' ? 'Medium' : 'Medium - Hard';
   }
 
+  // Bolt Insert
   let boltType = specs.boltType || specs.bolt_type;
-  if (!boltType) {
-    boltType = isMacro ? 'Screw-on' : 'M10 Allen';
+  if (!boltType && isHoldLike) {
+    boltType = cat === 'macros' ? 'Screw-on' : 'M10 Allen';
   }
 
   return {
@@ -73,21 +79,30 @@ function resolveProductSpecs(product) {
 
 export default function ProductDetail() {
   const { slug } = useParams();
-  const addItem = useCartStore((state) => state.addItem);
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const [relatedProducts, setRelatedProducts] = useState([]);
-  const [allSeriesProducts, setAllSeriesProducts] = useState([]);
   const [quantity, setQuantity] = useState(1);
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [selectedColor, setSelectedColor] = useState('BLACK / DUAL-TEX MATTE-GLOSS');
-  const [addedManifest, setAddedManifest] = useState(false);
+  const [activeImage, setActiveImage] = useState(0);
+  const [selectedVariants, setSelectedVariants] = useState({});
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // Fetch product data
+  // Keyboard navigation for Lightbox
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!isFullscreen) return;
+      if (e.key === 'Escape') setIsFullscreen(false);
+      if (e.key === 'ArrowLeft') handlePrevImage();
+      if (e.key === 'ArrowRight') handleNextImage();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFullscreen]);
+
+  // Fetch product by slug
   useEffect(() => {
     let isMounted = true;
 
@@ -102,16 +117,29 @@ export default function ProductDetail() {
             return;
           }
           setProduct(data);
+
+          const cat = (data.category || '').toLowerCase();
+          const isHoldLike = cat === 'holds' || cat === 'macros' || cat === 'volumes';
+
+          const variantsList =
+            data.variants && data.variants.length > 0
+              ? data.variants
+              : isHoldLike
+              ? [{ name: 'Color', options: defaultHoldColors }]
+              : [];
+
+          const defaultVariants = variantsList.reduce(
+            (acc, variant) => ({ ...acc, [variant.name]: variant.options?.[0] || '' }),
+            {}
+          );
+          setSelectedVariants(defaultVariants);
           setQuantity(1);
-          setActiveImageIndex(0);
-          setAddedManifest(false);
+          setActiveImage(0);
           window.scrollTo(0, 0);
 
-          // Get related products from same category
           if (data.category) {
             getProducts(data.category).then((catProducts) => {
-              if (isMounted && catProducts) {
-                setAllSeriesProducts(catProducts);
+              if (isMounted) {
                 setRelatedProducts(
                   catProducts.filter((p) => p.id !== data.id).slice(0, 3)
                 );
@@ -136,58 +164,26 @@ export default function ProductDetail() {
     };
   }, [slug]);
 
-  const resolvedSpecs = useMemo(() => resolveProductSpecs(product), [product]);
-
-  // Compute Next / Prev product in series
-  const { prevProduct, nextProduct } = useMemo(() => {
-    if (!allSeriesProducts.length || !product) return {};
-    const idx = allSeriesProducts.findIndex((p) => p.id === product.id || p.slug === product.slug);
-    if (idx === -1) return {};
-    const prev = idx > 0 ? allSeriesProducts[idx - 1] : null;
-    const next = idx < allSeriesProducts.length - 1 ? allSeriesProducts[idx + 1] : null;
-    return { prevProduct: prev, nextProduct: next };
-  }, [allSeriesProducts, product]);
-
-  const images = useMemo(() => {
-    if (!product) return ['/images/crimps.jpg'];
-    if (Array.isArray(product.images) && product.images.length > 0) {
-      return product.images;
+  const effectiveVariants = useMemo(() => {
+    if (!product) return [];
+    if (product.variants && product.variants.length > 0) {
+      return product.variants;
     }
-    return [product.image || '/images/crimps.jpg'];
+    const cat = (product.category || '').toLowerCase();
+    if (cat === 'holds' || cat === 'macros' || cat === 'volumes') {
+      return [{ name: 'Color', options: defaultHoldColors }];
+    }
+    return [];
   }, [product]);
 
-  const handlePrevImage = () => {
-    setActiveImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
-  };
-
-  const handleNextImage = () => {
-    setActiveImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
-  };
-
-  const handleAddToManifest = () => {
-    if (!product) return;
-    addItem(product, { Color: selectedColor }, quantity);
-    setAddedManifest(true);
-    setTimeout(() => setAddedManifest(false), 2200);
-  };
-
-  const isMacro = product && (product.category || '').toLowerCase() === 'macros';
-  const unitWeight = isMacro ? 3.48 : 1.85;
-  const currentTotalWeight = (unitWeight * quantity).toFixed(2);
-
-  // WhatsApp Direct Order Message
-  const whatsappUrl = useMemo(() => {
-    if (!product) return 'https://wa.me/628569044778';
-    const text = `Halo Anemone, saya ingin memesan spesimen berikut:\n\n• Produk: ${product.name} (${product.category})\n• Material: ${resolvedSpecs.material}\n• Jumlah: ${quantity} Set\n• Warna: ${selectedColor}\n• Bolt: ${resolvedSpecs.boltType}\n• Total Estimasi: ${formatPrice(product.price * quantity)}\n\nMohon info ketersediaan stok & jadwal pengiriman. Terima kasih!`;
-    return `https://wa.me/628569044778?text=${encodeURIComponent(text)}`;
-  }, [product, resolvedSpecs, quantity, selectedColor]);
+  const resolvedSpecs = useMemo(() => resolveProductSpecs(product), [product]);
 
   if (loading) {
     return (
-      <div className="bg-surface text-on-surface min-h-screen pt-32 pb-20 flex flex-col items-center justify-center text-center px-6">
-        <Loader2 size={36} className="text-primary animate-spin mb-4" />
-        <p className="font-label-mono text-xs uppercase tracking-widest text-text-muted">
-          Loading Technical Specimen...
+      <div className="bg-black text-white min-h-screen pt-32 pb-20 flex flex-col items-center justify-center text-center px-6">
+        <Loader2 size={40} className="text-teal animate-spin mb-4" />
+        <p className="text-xs uppercase font-bold tracking-widest text-neutral-400">
+          Loading Product Details...
         </p>
       </div>
     );
@@ -195,430 +191,369 @@ export default function ProductDetail() {
 
   if (error || !product) {
     return (
-      <div className="bg-surface text-on-surface min-h-screen pt-32 pb-20 flex flex-col items-center justify-center text-center px-6">
-        <div className="space-y-4 max-w-md">
-          <span className="font-label-mono text-xs uppercase text-text-muted tracking-widest">
-            ERROR 404 // SPEC NOT FOUND
-          </span>
-          <h2 className="font-headline-code text-2xl font-bold uppercase text-primary">
-            Produk Tidak Ditemukan
+      <div className="bg-black text-white min-h-screen pt-32 pb-20 flex flex-col items-center justify-center text-center px-6">
+        <div className="space-y-6 max-w-md">
+          <h2 className="text-3xl font-black uppercase tracking-wider text-neutral-500">
+            Product Not Found
           </h2>
-          <p className="font-body-sm text-xs text-text-muted leading-relaxed">
-            Spesimen produk atau rute yang Anda cari belum terdaftar di katalog Anemone.
+          <p className="text-neutral-400 text-sm font-light leading-relaxed">
+            Produk atau jalur yang Anda cari tidak dapat ditemukan.
           </p>
-          <div className="pt-2">
-            <Link
-              to="/shop"
-              className="inline-flex items-center gap-2 bg-primary text-on-primary px-6 py-2.5 rounded-full font-label-mono text-xs uppercase tracking-wider hover:bg-secondary transition-colors"
-            >
-              <ArrowLeft size={14} />
-              <span>Kembali ke Katalog</span>
-            </Link>
-          </div>
+          <Link
+            to="/shop"
+            className="inline-flex items-center gap-2 bg-white text-black font-bold px-6 py-3.5 rounded uppercase tracking-wider text-xs hover:bg-neutral-200 transition-all"
+          >
+            <ArrowLeft size={16} />
+            Back to Catalog
+          </Link>
         </div>
       </div>
     );
   }
 
+  const images = product.images && product.images.length > 0
+    ? product.images
+    : [product.image || '/images/crimps.jpg'];
+
+  const handlePrevImage = () => {
+    setActiveImage((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+  };
+
+  const handleNextImage = () => {
+    setActiveImage((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+  };
+
+  const handleDirectOrder = () => {
+    if (!product) return;
+    const colorStr = selectedVariants.Color ? ` (${selectedVariants.Color})` : '';
+    const text = `Halo Anemone, saya ingin memesan:\n• Produk: ${product.name}${colorStr}\n• Kategori: ${product.category}\n• Jumlah: ${quantity} Set\n• Bolt Insert: ${resolvedSpecs.boltType || 'Screw-on'}\n• Total: ${formatPrice(product.price * quantity)}\n\nMohon info ketersediaan stok & pengiriman. Terima kasih!`;
+    window.open(`https://wa.me/628569044778?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
+  };
+
   return (
-    <div className="bg-surface text-on-surface min-h-screen">
-      
-      {/* ================= SUB-NAVIGATION / BREADCRUMB BAR ================= */}
-      <header className="w-full bg-surface-container-lowest border-b border-hairline-border sticky top-16 z-30">
-        <div className="w-full px-6 lg:px-12 py-3 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-4 text-xs font-label-mono">
-            <Link
-              to="/shop"
-              className="inline-flex items-center gap-1.5 text-primary hover:text-text-muted transition-colors uppercase font-medium"
-            >
-              <span>←</span>
-              <span>CATALOG INDEX</span>
-            </Link>
-            <span className="text-hairline-border">/</span>
-            <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-text-muted">
-              <span className="uppercase">{product.category}</span>
-              <span>/</span>
-              <span className="uppercase text-on-surface font-semibold">{product.name}</span>
-            </nav>
-          </div>
-
-          {/* Series Navigation (Prev / Next) */}
-          <div className="flex items-center gap-3 font-label-mono text-xs text-text-muted">
-            <span className="hidden sm:inline uppercase text-[10px]">SERIES NAVIGATION:</span>
-            {prevProduct ? (
-              <Link
-                to={`/product/${prevProduct.slug}`}
-                className="hover:text-primary transition-colors text-primary flex items-center gap-1"
-              >
-                <span>← PREV [{prevProduct.name}]</span>
-              </Link>
-            ) : (
-              <span className="opacity-40">← PREV</span>
-            )}
-            <span className="text-hairline-border">|</span>
-            {nextProduct ? (
-              <Link
-                to={`/product/${nextProduct.slug}`}
-                className="hover:text-primary transition-colors text-primary flex items-center gap-1"
-              >
-                <span>NEXT [{nextProduct.name}] →</span>
-              </Link>
-            ) : (
-              <span className="opacity-40">NEXT →</span>
-            )}
-          </div>
+    <div className="bg-black text-white min-h-screen pb-24 pt-24 sm:pt-36">
+      <div style={{ maxWidth: '1200px' }} className="mx-auto w-full px-6 md:px-12 space-y-12">
+        
+        {/* BREADCRUMB */}
+        <div>
+          <Link
+            to="/shop"
+            className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-neutral-500 hover:text-white transition-colors"
+          >
+            <ArrowLeft size={14} />
+            <span>Back to Catalog</span>
+          </Link>
         </div>
-      </header>
 
-      {/* ================= MAIN PRODUCT HERO / SPLIT SPEC ================= */}
-      <main className="w-full bg-surface-container-lowest border-b border-hairline-border">
-        <div className="w-full grid grid-cols-1 lg:grid-cols-12">
-          
-          {/* LEFT COLUMN: STUDIO IMAGERY & VIEWPORT (7 COLS) */}
-          <section className="lg:col-span-7 border-b lg:border-b-0 lg:border-r border-hairline-border p-6 lg:p-12 flex flex-col justify-between bg-surface-container-lowest relative">
-            
-            {/* Floating Canvas Indicators */}
-            <div className="w-full flex items-center justify-between font-label-mono text-text-muted mb-4">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-primary inline-block"></span>
-                <span className="tracking-widest uppercase text-[10px] sm:text-[11px] font-semibold text-primary">
-                  STUDIO SPECIMEN // SWISS SCAN
-                </span>
-              </div>
-              <span className="text-[10px] sm:text-[11px] uppercase tracking-wider hidden sm:inline">
-                {isMacro ? 'DUAL-TEXTURE: GLOSS ZERO-FRICTION + 320-GRIT MICRO-TEX' : 'HIGH-DENSITY ISOTROPIC POLYMER'}
-              </span>
-            </div>
-
-            {/* Primary Canvas Showcase with Crosshairs */}
-            <div className="relative w-full flex-1 flex items-center justify-center py-8 my-4 min-h-[380px] sm:min-h-[460px] lg:min-h-[560px] bg-surface-concrete/50 border border-hairline-border/60">
-              
-              {/* Drafting Crosshairs */}
-              <div className="absolute inset-6 pointer-events-none opacity-20 border border-dashed border-text-muted/40"></div>
-              <div className="absolute top-3 left-3 font-label-mono text-[9px] text-text-muted uppercase">
-                AXIS: Z+210mm // ROT: 32°
-              </div>
-              <div className="absolute bottom-3 right-3 font-label-mono text-[9px] text-text-muted uppercase">
-                SCALE: 1:1 METRIC
-              </div>
-
-              {/* Product Image */}
-              <div className="relative group max-w-xl w-full flex flex-col items-center px-4">
-                <AnimatePresence mode="wait">
-                  <motion.img
-                    key={activeImageIndex}
-                    src={images[activeImageIndex]}
-                    alt={`${product.name} view ${activeImageIndex + 1}`}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.25 }}
-                    onClick={() => setIsFullscreen(true)}
-                    className="w-full h-auto max-h-[380px] sm:max-h-[440px] object-contain transition-transform duration-500 group-hover:scale-[1.02] cursor-zoom-in select-none"
-                  />
-                </AnimatePresence>
-              </div>
-
-              {/* Fullscreen Expand Icon */}
-              <button
-                type="button"
+        {/* MAIN IMAGE CAROUSEL VIEWER */}
+        <div className="space-y-6">
+          <div className="relative aspect-square sm:aspect-[4/3] md:aspect-[16/10] w-full max-w-5xl mx-auto rounded-lg overflow-hidden bg-[#121212] border border-white/10 group shadow-2xl flex items-center justify-center p-4 sm:p-6">
+            <AnimatePresence mode="wait">
+              <motion.img
+                key={activeImage}
+                src={images[activeImage]}
+                alt={`${product.name} preview ${activeImage + 1}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
                 onClick={() => setIsFullscreen(true)}
-                className="absolute top-3 right-3 p-2 bg-white/80 hover:bg-white text-primary border border-hairline-border rounded-full transition-colors cursor-pointer"
-                title="Zoom High-Res View"
-              >
-                <Maximize2 size={14} />
-              </button>
-            </div>
+                className="w-full h-full object-contain cursor-zoom-in hover:scale-102 transition-transform duration-300"
+              />
+            </AnimatePresence>
 
-            {/* Perspective Selector & Angle Buttons */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-3">
-              <div className="flex flex-wrap items-center gap-2">
-                {images.map((img, idx) => (
+            {/* Left & Right Arrow Navigation Controls */}
+            {images.length > 1 && (
+              <>
+                <button
+                  onClick={handlePrevImage}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/70 hover:bg-white text-white hover:text-black flex items-center justify-center transition-all border border-white/10 backdrop-blur-md cursor-pointer z-10"
+                  aria-label="Previous Image"
+                >
+                  <ChevronLeft size={22} />
+                </button>
+
+                <button
+                  onClick={handleNextImage}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/70 hover:bg-white text-white hover:text-black flex items-center justify-center transition-all border border-white/10 backdrop-blur-md cursor-pointer z-10"
+                  aria-label="Next Image"
+                >
+                  <ChevronRight size={22} />
+                </button>
+              </>
+            )}
+
+            {/* Fullscreen Expand Icon */}
+            <button
+              onClick={() => setIsFullscreen(true)}
+              className="absolute top-4 right-4 p-2.5 rounded-xl bg-black/70 hover:bg-white text-white hover:text-black border border-white/10 backdrop-blur-md transition-all cursor-pointer z-10 flex items-center gap-2"
+              title="Click to Zoom Fullscreen"
+            >
+              <Maximize2 size={16} />
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider hidden sm:inline">ZOOM</span>
+            </button>
+          </div>
+
+          {/* HORIZONTAL THUMBNAIL GALLERY STRIP */}
+          {images.length > 1 && (
+            <div className="flex items-center justify-center gap-3 overflow-x-auto pb-2 max-w-4xl mx-auto px-4">
+              {images.map((img, index) => {
+                const isActive = activeImage === index;
+                return (
                   <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setActiveImageIndex(idx)}
-                    className={`font-label-mono text-[10px] uppercase px-3 py-1.5 border transition-all cursor-pointer ${
-                      activeImageIndex === idx
-                        ? 'border-primary bg-primary text-on-primary font-semibold'
-                        : 'border-hairline-border hover:border-primary text-text-muted hover:text-primary bg-surface-container-lowest'
+                    key={index}
+                    onClick={() => setActiveImage(index)}
+                    className={`w-20 h-16 sm:w-24 sm:h-20 rounded overflow-hidden shrink-0 border-2 transition-all cursor-pointer bg-[#121212] p-1 ${
+                      isActive
+                        ? 'border-white scale-105'
+                        : 'border-white/10 hover:border-white/30 opacity-70 hover:opacity-100'
                     }`}
                   >
-                    0{idx + 1} / {idx === 0 ? 'APEX PERSPECTIVE' : idx === 1 ? 'PROFILE DUAL-TEX' : `VIEW ANGLE ${idx + 1}`}
+                    <img
+                      src={img}
+                      alt={`${product.name} thumbnail ${index + 1}`}
+                      className="w-full h-full object-contain"
+                    />
                   </button>
-                ))}
-              </div>
-
-              <div className="font-label-mono text-[10px] text-text-muted uppercase">
-                SPEC REF: #{product.slug.toUpperCase().slice(0, 8)}
-              </div>
+                );
+              })}
             </div>
+          )}
+        </div>
 
-          </section>
+        {/* FULLSCREEN LIGHTBOX MODAL */}
+        <AnimatePresence>
+          {isFullscreen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-4 md:p-8"
+              onClick={() => setIsFullscreen(false)}
+            >
+              {/* Lightbox Top Header */}
+              <div className="absolute top-6 left-6 right-6 flex items-center justify-between z-20 text-white pointer-events-auto">
+                <div className="space-y-0.5">
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-neutral-400 block">
+                    HIGH-RESOLUTION VIEW ({activeImage + 1} OF {images.length})
+                  </span>
+                  <h4 className="text-base font-bold uppercase tracking-wider">{product.name}</h4>
+                </div>
+                <button
+                  onClick={() => setIsFullscreen(false)}
+                  className="w-11 h-11 rounded-full bg-white/10 hover:bg-white text-white hover:text-black flex items-center justify-center transition-all border border-white/20 cursor-pointer"
+                  title="Close Zoom (Esc)"
+                >
+                  <X size={20} />
+                </button>
+              </div>
 
-          {/* RIGHT COLUMN: SPECIFICATION MATRIX & B2B DIRECT ORDER (5 COLS) */}
-          <section className="lg:col-span-5 p-6 lg:p-12 flex flex-col justify-between bg-surface-container-lowest">
-            <div>
-              
-              {/* Series & Category Meta */}
-              <div className="flex items-center justify-between pb-3 border-b border-hairline-border mb-4">
-                <span className="font-label-mono text-[11px] text-text-muted uppercase tracking-widest">
-                  SERIES: {product.category.toUpperCase()} [BATCH 2026]
-                </span>
-                <span className="font-label-mono text-[11px] text-primary font-bold">
+              {/* Lightbox Image Container */}
+              <div
+                className="relative max-w-6xl max-h-[85vh] w-full h-full flex items-center justify-center p-2 sm:p-6"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <img
+                  src={images[activeImage]}
+                  alt={`${product.name} zoomed`}
+                  className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl select-none"
+                />
+
+                {/* Lightbox Arrow Controls */}
+                {images.length > 1 && (
+                  <>
+                    <button
+                      onClick={handlePrevImage}
+                      className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/80 hover:bg-white text-white hover:text-black flex items-center justify-center transition-all border border-white/20 cursor-pointer shadow-lg"
+                    >
+                      <ChevronLeft size={24} />
+                    </button>
+                    <button
+                      onClick={handleNextImage}
+                      className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/80 hover:bg-white text-white hover:text-black flex items-center justify-center transition-all border border-white/20 cursor-pointer shadow-lg"
+                    >
+                      <ChevronRight size={24} />
+                    </button>
+                  </>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* PRODUCT DETAILS & PURCHASE PANEL */}
+        <div className="max-w-4xl mx-auto space-y-8 border-t border-white/10 pt-10">
+          
+          {/* Header & Title */}
+          <div className="space-y-2 text-center sm:text-left">
+            <span className="bg-white/5 border border-white/10 rounded px-2 py-1 text-[10px] font-bold tracking-widest uppercase inline-block w-max">
+              {product.category}
+            </span>
+            <h1 className="text-3xl sm:text-5xl font-black uppercase tracking-tight text-white font-sans mt-2">
+              {product.name}
+            </h1>
+            <p className="text-neutral-400 text-sm md:text-base font-light leading-relaxed max-w-2xl">
+              {product.description || product.shortDescription}
+            </p>
+          </div>
+
+          {/* Technical Specs & Pricing Grid */}
+          <div className="grid sm:grid-cols-12 gap-8 items-start bg-neutral-950 border border-white/[0.06] rounded-lg p-6 sm:p-8">
+            
+            {/* 1. Price, Color Selector & Add to Cart Column (Mobile First / Desktop Right) */}
+            <div className="order-1 sm:order-2 sm:col-span-5 space-y-6 sm:border-l border-white/10 sm:pl-8">
+              <div className="space-y-1">
+                <span className="text-neutral-500 text-[10px] uppercase font-bold tracking-widest block">Price</span>
+                <div className="text-2xl sm:text-3xl font-black text-white">
                   {formatPrice(product.price)}
-                </span>
-              </div>
-
-              {/* Monumental Identifier */}
-              <div className="mb-6">
-                <span className="font-headline-lg text-lg text-text-muted tracking-tight block uppercase">
-                  {product.category}
-                </span>
-                <h1 className="font-display-hero text-3xl sm:text-5xl font-bold uppercase tracking-tight text-primary leading-none mt-1">
-                  {product.name}
-                </h1>
-                <p className="font-body-lg text-xs sm:text-sm text-text-muted mt-3 leading-relaxed">
-                  {product.description || product.shortDescription}
-                </p>
-              </div>
-
-              {/* Technical Spec Hairline Grid */}
-              <div className="border-t border-hairline-border mb-6">
-                <div className="flex items-center justify-between py-2 border-b border-hairline-border font-label-mono text-xs">
-                  <span className="text-text-muted uppercase tracking-wider text-[11px]">COMPOSITION MATERIAL</span>
-                  <span className="text-primary font-semibold text-right">{resolvedSpecs.material}</span>
-                </div>
-                <div className="flex items-center justify-between py-2 border-b border-hairline-border font-label-mono text-xs">
-                  <span className="text-text-muted uppercase tracking-wider text-[11px]">QUANTITY / SET</span>
-                  <span className="text-primary font-semibold text-right">{resolvedSpecs.quantity}</span>
-                </div>
-                <div className="flex items-center justify-between py-2 border-b border-hairline-border font-label-mono text-xs">
-                  <span className="text-text-muted uppercase tracking-wider text-[11px]">HARDWARE FIXATION</span>
-                  <span className="text-primary font-semibold text-right">{resolvedSpecs.boltType}</span>
-                </div>
-                <div className="flex items-center justify-between py-2 border-b border-hairline-border font-label-mono text-xs">
-                  <span className="text-text-muted uppercase tracking-wider text-[11px]">HOLD TYPE / GEOMETRY</span>
-                  <span className="text-primary font-semibold text-right">{resolvedSpecs.type}</span>
-                </div>
-                <div className="flex items-center justify-between py-2 border-b border-hairline-border font-label-mono text-xs">
-                  <span className="text-text-muted uppercase tracking-wider text-[11px]">DIFFICULTY PROFILE</span>
-                  <span className="text-primary font-semibold text-right">{resolvedSpecs.difficulty}</span>
-                </div>
-                <div className="flex items-center justify-between py-2 border-b border-hairline-border font-label-mono text-xs">
-                  <span className="text-text-muted uppercase tracking-wider text-[11px]">MAX FASTENING TORQUE</span>
-                  <span className="text-primary font-semibold text-right">45 Nm (Integrated Washer)</span>
-                </div>
-                <div className="flex items-center justify-between py-2 border-b border-hairline-border font-label-mono text-xs">
-                  <span className="text-text-muted uppercase tracking-wider text-[11px]">PANEL SUITABILITY</span>
-                  <span className="text-primary font-semibold text-right">15° to 55° Competition Overhangs</span>
                 </div>
               </div>
 
-              {/* Color Swatches (IFSC COLOR PALETTE) */}
-              <div className="mb-6">
-                <div className="flex items-center justify-between mb-2 font-label-mono text-xs">
-                  <span className="text-text-muted uppercase tracking-wider text-[11px]">IFSC COLOR PALETTE</span>
-                  <span className="text-primary uppercase text-[11px] font-semibold">{selectedColor}</span>
-                </div>
-                <div className="flex flex-wrap items-center gap-2 pt-1">
-                  {Object.entries(ifscColorMap).map(([key, col]) => {
-                    const isSelected = selectedColor === col.name;
+              {/* COLOR / VARIANT SELECTOR */}
+              {effectiveVariants.length > 0 && (
+                <div className="space-y-4 pt-4 border-t border-white/10">
+                  {effectiveVariants.map((variant) => {
+                    const currentSelected = selectedVariants[variant.name] || variant.options?.[0] || '';
                     return (
-                      <button
-                        key={key}
-                        type="button"
-                        onClick={() => setSelectedColor(col.name)}
-                        className={`relative w-7 h-7 rounded-full transition-all cursor-pointer ${
-                          isSelected ? 'ring-2 ring-primary ring-offset-2 scale-110' : 'ring-1 ring-hairline-border hover:opacity-85'
-                        }`}
-                        style={{ backgroundColor: col.bg }}
-                        title={col.name}
-                      />
+                      <div key={variant.name} className="space-y-2.5">
+                        <div className="flex items-center justify-between text-[11px] uppercase tracking-wider">
+                          <span className="text-neutral-400 font-bold">PILIH {variant.name}:</span>
+                          <span className="text-white font-bold bg-white/10 px-2.5 py-0.5 rounded font-mono text-[10px]">
+                            {currentSelected}
+                          </span>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2">
+                          {variant.options?.map((opt) => {
+                            const isSelected = currentSelected === opt;
+                            const lower = opt.toLowerCase();
+                            const dotColor = colorMap[lower] || null;
+
+                            return (
+                              <button
+                                key={opt}
+                                type="button"
+                                onClick={() =>
+                                  setSelectedVariants((prev) => ({
+                                    ...prev,
+                                    [variant.name]: opt,
+                                  }))
+                                }
+                                className={`px-3 py-2 rounded text-xs font-bold uppercase tracking-wider flex items-center gap-2 border transition-all cursor-pointer ${
+                                  isSelected
+                                    ? 'bg-white text-black border-white shadow-md scale-105'
+                                    : 'bg-black/60 text-neutral-300 border-white/15 hover:border-white/40 hover:text-white'
+                                }`}
+                              >
+                                {dotColor && (
+                                  <span
+                                    className={`w-3.5 h-3.5 rounded-full shrink-0 border ${
+                                      isSelected ? 'border-black/40' : 'border-white/30'
+                                    }`}
+                                    style={{ backgroundColor: dotColor }}
+                                  />
+                                )}
+                                <span>{opt}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
                     );
                   })}
                 </div>
-              </div>
+              )}
 
               {/* Quantity Selector */}
-              <div className="flex items-center justify-between p-3 border border-hairline-border bg-surface-concrete mb-6">
-                <div className="flex flex-col">
-                  <span className="font-label-mono text-[10px] text-text-muted uppercase tracking-wider">UNIT SELECTION</span>
-                  <span className="font-label-mono text-xs text-primary font-semibold">
-                    EST. WEIGHT: {currentTotalWeight} KG
-                  </span>
-                </div>
-                <div className="flex items-center gap-3">
+              <div className="space-y-2">
+                <span className="text-[10px] uppercase font-bold tracking-widest text-neutral-400 block">Select Quantity</span>
+                <div className="flex items-center justify-between border border-white/10 rounded bg-black h-12 px-2">
                   <button
-                    type="button"
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="w-8 h-8 border border-hairline-border hover:border-primary bg-surface-container-lowest flex items-center justify-center font-label-mono text-primary transition-colors text-sm font-semibold cursor-pointer"
+                    className="p-2 text-neutral-400 hover:text-white transition-colors cursor-pointer"
                   >
-                    -
+                    <Minus size={14} />
                   </button>
-                  <span className="font-headline-code text-base font-bold text-primary w-8 text-center select-none">
-                    {quantity}
-                  </span>
+                  <span className="text-sm font-bold">{quantity}</span>
                   <button
-                    type="button"
                     onClick={() => setQuantity(quantity + 1)}
-                    className="w-8 h-8 border border-hairline-border hover:border-primary bg-surface-container-lowest flex items-center justify-center font-label-mono text-primary transition-colors text-sm font-semibold cursor-pointer"
+                    className="p-2 text-neutral-400 hover:text-white transition-colors cursor-pointer"
                   >
-                    +
+                    <Plus size={14} />
                   </button>
                 </div>
               </div>
 
-            </div>
-
-            {/* Conversion & B2B Route-Setter Actions */}
-            <div className="space-y-3 pt-4 border-t border-hairline-border">
-              
-              {/* Primary WhatsApp Direct CTA */}
-              <a
-                href={whatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full inline-flex items-center justify-between px-6 py-3.5 bg-primary hover:bg-neutral-800 text-on-primary transition-all duration-200 group rounded-full"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="font-headline-code text-xs sm:text-sm uppercase tracking-widest font-semibold">
-                    PESAN LANGSUNG VIA WHATSAPP
-                  </span>
-                  <span className="font-label-mono text-[9px] text-text-muted border border-border-dark px-2 py-0.5 rounded-full group-hover:text-on-primary">
-                    DIRECT B2B
-                  </span>
-                </div>
-                <span className="font-headline-code text-base transition-transform group-hover:translate-x-1">→</span>
-              </a>
-
-              {/* Secondary Add to Manifest CTA */}
+              {/* WhatsApp Direct Order Button */}
               <button
                 type="button"
-                onClick={handleAddToManifest}
-                className="w-full inline-flex items-center justify-between px-6 py-3 border border-primary text-primary hover:bg-surface-container transition-colors rounded-full font-label-mono text-xs uppercase tracking-wider cursor-pointer"
+                onClick={handleDirectOrder}
+                className="w-full h-14 rounded font-bold uppercase tracking-wider text-xs transition-all duration-300 flex items-center justify-center gap-2.5 bg-white text-black hover:bg-neutral-200 cursor-pointer shadow-lg active:scale-98"
               >
-                <span className="font-medium">
-                  {addedManifest ? '✓ BERHASIL DITAMBAHKAN' : '+ TAMBAH KE SETTER MANIFEST TRAY'}
-                </span>
-                <span className="text-[10px] font-semibold text-text-muted">
-                  REF: #{product.slug.toUpperCase().slice(0, 6)}
-                </span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                </svg>
+                <span>Pesan Sekarang via WhatsApp</span>
               </button>
-
-              {/* Technical Download Links */}
-              <div className="grid grid-cols-2 gap-2 pt-1 font-label-mono text-[11px]">
-                <a
-                  href="/shop"
-                  className="px-3 py-2 border border-hairline-border hover:border-primary text-text-muted hover:text-primary transition-colors flex items-center justify-between uppercase"
-                >
-                  <span>CAD STEP / OBJ 3D</span>
-                  <span>↓ [14MB]</span>
-                </a>
-                <a
-                  href="/shop"
-                  className="px-3 py-2 border border-hairline-border hover:border-primary text-text-muted hover:text-primary transition-colors flex items-center justify-between uppercase"
-                >
-                  <span>PDF SPEC ARCHIVE</span>
-                  <span>↓ [1.2MB]</span>
-                </a>
-              </div>
-
             </div>
 
-          </section>
+            {/* 2. Specs Table Column (Mobile Second / Desktop Left) */}
+            <div className="order-2 sm:order-1 sm:col-span-7 space-y-4 pt-6 sm:pt-0 border-t sm:border-t-0 border-white/10">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-neutral-400 border-b border-white/[0.06] pb-2">
+                Product Details
+              </h3>
+              
+              <div className="space-y-2.5 text-xs">
+                <div className="flex justify-between py-1 border-b border-white/[0.06]">
+                  <span className="text-neutral-500 uppercase font-semibold">Quantity / Set:</span>
+                  <span className="text-white font-bold">{resolvedSpecs.quantity || '1 Set'}</span>
+                </div>
+                {resolvedSpecs.material && (
+                  <div className="flex justify-between py-1 border-b border-white/[0.06]">
+                    <span className="text-neutral-500 uppercase font-semibold">Material:</span>
+                    <span className="text-white font-bold">{resolvedSpecs.material}</span>
+                  </div>
+                )}
+                {resolvedSpecs.type && (
+                  <div className="flex justify-between py-1 border-b border-white/[0.06]">
+                    <span className="text-neutral-500 uppercase font-semibold">Hold Type:</span>
+                    <span className="text-neutral-300 font-medium">{resolvedSpecs.type}</span>
+                  </div>
+                )}
+                {resolvedSpecs.difficulty && (
+                  <div className="flex justify-between py-1 border-b border-white/[0.06]">
+                    <span className="text-neutral-500 uppercase font-semibold">Difficulty:</span>
+                    <span className="text-neutral-300 font-medium">{resolvedSpecs.difficulty}</span>
+                  </div>
+                )}
+                {resolvedSpecs.boltType && (
+                  <div className="flex justify-between py-1 border-b border-white/[0.06]">
+                    <span className="text-neutral-500 uppercase font-semibold">Bolt Insert:</span>
+                    <span className="text-neutral-300 font-medium">{resolvedSpecs.boltType}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+          </div>
 
         </div>
-      </main>
 
-      {/* ================= COMPLEMENTARY SHAPES / FAMILY GRID ================= */}
-      {relatedProducts.length > 0 && (
-        <section className="w-full bg-surface-container-lowest py-16 border-b border-hairline-border px-6 lg:px-12">
-          <div className="max-w-7xl mx-auto space-y-8">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-hairline-border pb-4">
-              <div>
-                <span className="font-label-mono text-[11px] text-text-muted uppercase tracking-wider">
-                  R-SERIES GEOMETRIC FAMILIES
-                </span>
-                <h3 className="font-headline-lg text-2xl font-bold uppercase tracking-tight text-primary mt-1">
-                  Complementary Shapes in {product.category} Family
-                </h3>
-              </div>
-              <Link
-                to={`/shop?category=${encodeURIComponent(product.category)}`}
-                className="font-label-mono text-xs uppercase text-primary hover:underline"
-              >
-                VIEW FULL {product.category.toUpperCase()} CATALOG →
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 border-t border-hairline-border">
+        {/* RELATED PRODUCTS */}
+        {relatedProducts.length > 0 && (
+          <section className="pt-12 border-t border-white/10">
+            <h3 className="text-lg font-bold uppercase tracking-widest text-white mb-8 text-center">
+              You Might Also Like
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
               {relatedProducts.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}
             </div>
-          </div>
-        </section>
-      )}
-
-      {/* FULLSCREEN LIGHTBOX MODAL */}
-      <AnimatePresence>
-        {isFullscreen && (
-          <div
-            className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-4 md:p-8"
-            onClick={() => setIsFullscreen(false)}
-          >
-            <div className="absolute top-6 left-6 right-6 flex items-center justify-between z-20 text-white pointer-events-auto">
-              <div className="space-y-0.5">
-                <span className="text-[10px] font-label-mono uppercase tracking-widest text-neutral-400 block">
-                  HIGH-RESOLUTION SPECIMEN ({activeImageIndex + 1} OF {images.length})
-                </span>
-                <h4 className="text-base font-bold uppercase tracking-wider">{product.name}</h4>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsFullscreen(false)}
-                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white text-white hover:text-black flex items-center justify-center transition-all border border-white/20 cursor-pointer"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div
-              className="relative max-w-5xl max-h-[85vh] w-full h-full flex items-center justify-center p-4"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <img
-                src={images[activeImageIndex]}
-                alt={`${product.name} high res`}
-                className="max-w-full max-h-[85vh] object-contain select-none"
-              />
-              {images.length > 1 && (
-                <>
-                  <button
-                    type="button"
-                    onClick={handlePrevImage}
-                    className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/80 hover:bg-white text-white hover:text-black flex items-center justify-center border border-white/20 cursor-pointer shadow-lg"
-                  >
-                    <ChevronLeft size={22} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleNextImage}
-                    className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/80 hover:bg-white text-white hover:text-black flex items-center justify-center border border-white/20 cursor-pointer shadow-lg"
-                  >
-                    <ChevronRight size={22} />
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
+          </section>
         )}
-      </AnimatePresence>
 
-      {/* Setter Specification Manifest Floating Bar and Modal */}
-      <SetterManifestModal />
-
+      </div>
     </div>
   );
 }

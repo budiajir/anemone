@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Outlet, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
@@ -27,23 +27,16 @@ import ErrorBoundary from "./components/ErrorBoundary";
 
 // Public site layout wrapper
 function ClientLayout() {
-  const location = useLocation();
-  const isShopOrProduct =
-    location.pathname.startsWith("/shop") ||
-    location.pathname.startsWith("/catalog") ||
-    location.pathname.startsWith("/product") ||
-    location.pathname === "/macros";
-
   return (
-    <div className={`min-h-screen flex flex-col ${isShopOrProduct ? "bg-surface text-on-surface" : "bg-black text-white pb-16 md:pb-0"}`}>
+    <div className="min-h-screen bg-black text-white flex flex-col pb-16 md:pb-0">
       <Navbar />
       <main className="flex-grow">
         <Outlet />
       </main>
-      {!isShopOrProduct && <CatalogDownloadBanner />}
+      <CatalogDownloadBanner />
       <Footer />
       {/* Mobile-Only Sticky Floating Contact Bar */}
-      {!isShopOrProduct && <MobileStickyContactBar />}
+      <MobileStickyContactBar />
     </div>
   );
 }
