@@ -6,10 +6,6 @@ import SetterManifestModal from "../components/SetterManifestModal";
 import { categories } from "../data/products";
 import { getProducts } from "../services/api";
 
-/**
- * Heuristic helper to deduce standard size (S, M, L, XL, Macro)
- * based on product metadata, specifications, and name.
- */
 function getProductSize(product) {
   if (!product) return 'm';
   const specs = product.specs || {};
@@ -49,9 +45,6 @@ function getProductSize(product) {
   return 'm';
 }
 
-/**
- * Matches product difficulty against selected filter option
- */
 function matchesDifficulty(product, target) {
   if (target === 'all') return true;
   const specs = product.specs || {};
@@ -77,6 +70,8 @@ function matchesDifficulty(product, target) {
   return diff.includes(t) || desc.includes(t);
 }
 
+const pillCategories = ["All", "Holds", "Macros", "Volumes", "Accessories"];
+
 export default function Shop() {
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
@@ -85,7 +80,7 @@ export default function Shop() {
   const [productsList, setProductsList] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 3 Primary Filters (Series families, Difficulty, Size)
+  // Filters (Difficulty, Size)
   const [selectedDifficulty, setSelectedDifficulty] = useState("all");
   const [selectedSize, setSelectedSize] = useState("all");
 
@@ -145,7 +140,7 @@ export default function Shop() {
     selectedDifficulty !== "all" ||
     selectedSize !== "all";
 
-  // Filtered Products by Series families, Difficulty, and Size
+  // Filtered Products
   const filteredProducts = useMemo(() => {
     return productsList.filter((product) => {
       // 1. Difficulty filter
@@ -172,242 +167,242 @@ export default function Shop() {
     });
   }, [productsList, selectedDifficulty, selectedSize]);
 
-  // Scroll to top immediately on mount and category change
+  // Immediate scroll to top on mount and category change
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, [activeCategory, location.pathname]);
 
+  const displayTitle = activeCategory === "All" ? "Holds & Macros" : activeCategory;
+
   return (
     <div className="bg-black text-white min-h-screen">
-      <main className="w-full pt-20 sm:pt-24 bg-black min-h-[calc(100vh-16rem)]">
-        <div className="flex flex-col w-full">
-          
-          {/* Minimalist Title Section (Dark Flathold Editorial Heritage) */}
-          <section className="w-full pt-8 pb-10 sm:pt-12 sm:pb-14 px-6 flex flex-col items-center justify-center text-center">
-            <div className="inline-flex items-center gap-2 font-label-mono text-[11px] text-[#666D71] uppercase tracking-widest mb-3 select-none">
-              <span>SYS.24</span>
-              <span>•</span>
-              <span>OFFICIAL IFSC PRODUCER</span>
-              <span>•</span>
-              <span>BANDUNG / ZÜRICH</span>
-            </div>
-            <h1 className="font-display-hero text-4xl sm:text-6xl md:text-7xl text-white tracking-tight font-bold leading-tight uppercase py-1">
-              {activeCategory === "All" ? "Macros & Series" : activeCategory}
-            </h1>
-            <p className="mt-2.5 font-body-sm text-xs sm:text-sm text-[#666D71] max-w-xl text-center leading-relaxed">
-              Dual-texture fiberglass volumes and high-density polyurethane geometries engineered for commercial setting dynamics and World Cup circuit compliance.
-            </p>
-          </section>
+      {/* Container with generous top clearance ensuring title is never cut off by fixed navbar */}
+      <div className="w-full pt-28 sm:pt-32 lg:pt-36 bg-black">
+        
+        {/* Title Section matching screenshot layout: clean title, NO subtext */}
+        <section className="w-full px-6 flex flex-col items-center justify-center text-center pb-4">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-headline-lg font-normal tracking-tight text-white capitalize leading-tight">
+            {displayTitle}
+          </h1>
 
-          {/* Precision Filter Bar (Series families, Difficulty, Size) */}
-          <section className="w-full border-t border-b border-[#262B2E] bg-black sticky top-16 z-30 transition-shadow duration-200">
-            <div className="max-w-7xl mx-auto px-6 py-3 flex flex-wrap items-center justify-between gap-y-3 gap-x-6 text-white">
-              
-              {/* Filter Dropdowns */}
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-2.5 font-label-mono text-xs">
-                
-                {/* 1. Category / Series Families */}
-                <div className="flex items-center gap-2">
-                  <span className="text-[#666D71] whitespace-nowrap">Series families :</span>
-                  <div className="relative inline-block">
-                    <select
-                      value={activeCategory.toLowerCase()}
-                      onChange={(e) => handleCategoryChange(e.target.value)}
-                      className="appearance-none bg-black border border-[#262B2E] rounded-full px-3.5 py-1.5 pr-7 text-white focus:outline-none focus:border-white transition-colors cursor-pointer text-xs uppercase tracking-wider font-label-mono"
-                    >
-                      <option value="all" className="bg-black">ALL</option>
-                      {categories.map((c) => (
-                        <option key={c} value={c.toLowerCase()} className="bg-black">{c}</option>
-                      ))}
-                    </select>
-                    <span className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-white text-[10px]">↓</span>
-                  </div>
-                </div>
-
-                {/* 2. Difficulty Filter */}
-                <div className="flex items-center gap-2">
-                  <span className="text-[#666D71] whitespace-nowrap">Difficulty :</span>
-                  <div className="relative inline-block">
-                    <select
-                      value={selectedDifficulty}
-                      onChange={(e) => setSelectedDifficulty(e.target.value)}
-                      className="appearance-none bg-black border border-[#262B2E] rounded-full px-3.5 py-1.5 pr-7 text-white focus:outline-none focus:border-white transition-colors cursor-pointer text-xs uppercase tracking-wider font-label-mono"
-                    >
-                      <option value="all" className="bg-black">ALL</option>
-                      <option value="easy" className="bg-black">Easy</option>
-                      <option value="easy - medium" className="bg-black">Easy - Medium</option>
-                      <option value="medium" className="bg-black">Medium</option>
-                      <option value="medium - hard" className="bg-black">Medium - Hard</option>
-                      <option value="hard" className="bg-black">Hard</option>
-                    </select>
-                    <span className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-white text-[10px]">↓</span>
-                  </div>
-                </div>
-
-                {/* 3. Size Filter */}
-                <div className="flex items-center gap-2">
-                  <span className="text-[#666D71] whitespace-nowrap">Size :</span>
-                  <div className="relative inline-block">
-                    <select
-                      value={selectedSize}
-                      onChange={(e) => setSelectedSize(e.target.value)}
-                      className="appearance-none bg-black border border-[#262B2E] rounded-full px-3.5 py-1.5 pr-7 text-white focus:outline-none focus:border-white transition-colors cursor-pointer text-xs uppercase tracking-wider font-label-mono"
-                    >
-                      <option value="all" className="bg-black">ALL</option>
-                      <option value="s" className="bg-black">S (Small)</option>
-                      <option value="m" className="bg-black">M (Medium)</option>
-                      <option value="l" className="bg-black">L (Large)</option>
-                      <option value="xl" className="bg-black">XL (Extra Large)</option>
-                      <option value="macro" className="bg-black">Macro</option>
-                    </select>
-                    <span className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-white text-[10px]">↓</span>
-                  </div>
-                </div>
-
-              </div>
-
-              {/* Quick Index Count & Reset */}
-              <div className="flex items-center gap-4 font-label-mono text-xs">
-                <span className="text-[#666D71] uppercase">
-                  SHOWING {filteredProducts.length} / {productsList.length} SPECS
-                </span>
-                {isFiltered && (
-                  <button
-                    type="button"
-                    onClick={resetFilters}
-                    className="text-white underline hover:text-neutral-400 uppercase cursor-pointer"
-                  >
-                    RESET
-                  </button>
-                )}
-              </div>
-
-            </div>
-          </section>
-
-          {/* 4-Column Continuous Hairline Matrix (Direct Flathold Aesthetic on Pure Black) */}
-          <section className="w-full bg-black">
-            {loading ? (
-              <div className="py-32 flex flex-col items-center justify-center text-center space-y-4">
-                <Loader2 size={36} className="text-white animate-spin" />
-                <p className="font-label-mono text-xs uppercase tracking-widest text-[#666D71]">
-                  Loading Spec Matrix...
-                </p>
-              </div>
-            ) : filteredProducts.length > 0 ? (
-              <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border-t border-[#262B2E]">
-                {filteredProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
-            ) : (
-              <div className="py-28 px-6 text-center space-y-4 max-w-lg mx-auto">
-                <span className="font-label-mono text-xs uppercase tracking-widest text-[#666D71] block">
-                  ZERO MATCHES FOUND
-                </span>
-                <h3 className="font-headline-code text-2xl font-bold text-white uppercase">
-                  Tidak Ada Produk yang Sesuai Filter
-                </h3>
-                <p className="font-body-sm text-xs text-[#666D71] leading-relaxed">
-                  Coba ubah kriteria filter difficulty atau size, atau tekan tombol reset untuk kembali melihat seluruh inventaris.
-                </p>
+          {/* Pill Tabs for Series Families (Replacing Continent Pills as requested) */}
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 mt-8 mb-4 max-w-4xl mx-auto">
+            {pillCategories.map((cat) => {
+              const isActive = activeCategory.toLowerCase() === cat.toLowerCase();
+              return (
                 <button
+                  key={cat}
                   type="button"
-                  onClick={resetFilters}
-                  className="bg-white text-black px-6 py-2.5 rounded-full font-label-mono text-xs uppercase tracking-wider font-bold hover:bg-neutral-200 transition-colors cursor-pointer"
+                  onClick={() => handleCategoryChange(cat)}
+                  className={`px-8 py-3 rounded-full text-xs sm:text-sm uppercase tracking-wider font-semibold transition-all duration-200 cursor-pointer ${
+                    isActive
+                      ? "bg-white text-black shadow-lg"
+                      : "border border-[#262B2E] text-neutral-400 hover:text-white hover:border-white/50 bg-transparent"
+                  }`}
                 >
-                  RESET FILTER
+                  {cat}
                 </button>
-              </div>
-            )}
-          </section>
+              );
+            })}
+          </div>
 
-          {/* Technical Material Index Matrix (Laboratory Precision on Dark Background) */}
-          <section className="w-full bg-black py-16 lg:py-20 border-t border-[#262B2E] px-6 lg:px-12">
-            <div className="max-w-7xl mx-auto space-y-12">
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                <div>
-                  <span className="font-label-mono text-xs text-[#666D71] uppercase tracking-widest">
-                    SPECIFICATION COMPLIANCE
-                  </span>
-                  <h2 className="font-headline-lg text-2xl sm:text-3xl font-bold text-white mt-1">
-                    Material Integrity &amp; Friction Grain
-                  </h2>
-                </div>
-                <p className="font-body-sm text-xs text-[#666D71] max-w-md leading-relaxed">
-                  Every Anemone volume is cast under controlled pressure to prevent void bubbles, and finished with precision grit dispersion according to DIN 18032 friction standards.
-                </p>
-              </div>
-
-              {/* 3 Dark Tech Spec Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-label-mono text-xs">
-                
-                {/* Tech 1 */}
-                <div className="bg-[#070707] border border-[#262B2E] p-6 sm:p-8 flex flex-col justify-between space-y-6">
-                  <div>
-                    <div className="flex items-center justify-between text-[#666D71] text-[10px] pb-3 border-b border-[#262B2E] uppercase">
-                      <span>TECH.01</span>
-                      <span className="font-semibold text-white">COMPLIANT IFSC</span>
-                    </div>
-                    <h3 className="font-headline-code text-xl font-bold text-white mt-4">
-                      Dual-Tex Fiberglass
-                    </h3>
-                    <p className="font-body-sm text-xs text-[#666D71] mt-2 leading-relaxed">
-                      Ultra-light hollow construction for competition macros. Combines high-gloss low-drag zero-step coating with 280-mesh micro-quartz perimeter holds.
-                    </p>
-                  </div>
-                  <div className="pt-4 border-t border-[#262B2E] flex items-center justify-between text-[11px] text-[#666D71]">
-                    <span>DENSITY: 1.45 G/CM³</span>
-                    <span className="text-white font-medium">NO WALL DAMAGE</span>
-                  </div>
-                </div>
-
-                {/* Tech 2 */}
-                <div className="bg-[#070707] border border-[#262B2E] p-6 sm:p-8 flex flex-col justify-between space-y-6">
-                  <div>
-                    <div className="flex items-center justify-between text-[#666D71] text-[10px] pb-3 border-b border-[#262B2E] uppercase">
-                      <span>TECH.02</span>
-                      <span className="font-semibold text-white">SWISS POLYMER</span>
-                    </div>
-                    <h3 className="font-headline-code text-xl font-bold text-white mt-4">
-                      Dannomond PU Pure
-                    </h3>
-                    <p className="font-body-sm text-xs text-[#666D71] mt-2 leading-relaxed">
-                      High fracture-toughness thermoset polymer. Unmatched washer seating strength with zero flex under extreme commercial impact loads.
-                    </p>
-                  </div>
-                  <div className="pt-4 border-t border-[#262B2E] flex items-center justify-between text-[11px] text-[#666D71]">
-                    <span>IMPACT: &gt;32 KJ/M²</span>
-                    <span className="text-white font-medium">100% COLOR STABLE</span>
-                  </div>
-                </div>
-
-                {/* Tech 3 */}
-                <div className="bg-[#070707] border border-[#262B2E] p-6 sm:p-8 flex flex-col justify-between space-y-6">
-                  <div>
-                    <div className="flex items-center justify-between text-[#666D71] text-[10px] pb-3 border-b border-[#262B2E] uppercase">
-                      <span>TECH.03</span>
-                      <span className="font-semibold text-white">PATENTED INSERT</span>
-                    </div>
-                    <h3 className="font-headline-code text-xl font-bold text-white mt-4">
-                      Dual-Fixation System
-                    </h3>
-                    <p className="font-body-sm text-xs text-[#666D71] mt-2 leading-relaxed">
-                      Reinforced stainless steel bushings integrated flush with the hold base. Engineered for rapid cordless impact-wrench route-setting rotations.
-                    </p>
-                  </div>
-                  <div className="pt-4 border-t border-[#262B2E] flex items-center justify-between text-[11px] text-[#666D71]">
-                    <span>TORQUE MAX: 45 NM</span>
-                    <span className="text-white font-medium">EN 12572-3</span>
-                  </div>
-                </div>
-
+          {/* Centered Filter Row matching screenshot */}
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 font-label-mono text-xs my-4 text-white">
+            
+            {/* 1. Series families */}
+            <div className="flex items-center gap-2">
+              <span className="text-[#666D71] whitespace-nowrap">Series families :</span>
+              <div className="relative inline-block">
+                <select
+                  value={activeCategory.toLowerCase()}
+                  onChange={(e) => handleCategoryChange(e.target.value)}
+                  className="appearance-none bg-black border border-[#262B2E] rounded-full px-4 py-1.5 pr-8 text-white focus:outline-none focus:border-white transition-colors cursor-pointer text-xs uppercase tracking-wider font-label-mono"
+                >
+                  <option value="all" className="bg-black">ALL</option>
+                  {categories.map((c) => (
+                    <option key={c} value={c.toLowerCase()} className="bg-black">{c}</option>
+                  ))}
+                </select>
+                <span className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-white text-[10px]">↓</span>
               </div>
             </div>
-          </section>
 
-        </div>
-      </main>
+            {/* 2. Difficulty */}
+            <div className="flex items-center gap-2">
+              <span className="text-[#666D71] whitespace-nowrap">Difficulty :</span>
+              <div className="relative inline-block">
+                <select
+                  value={selectedDifficulty}
+                  onChange={(e) => setSelectedDifficulty(e.target.value)}
+                  className="appearance-none bg-black border border-[#262B2E] rounded-full px-4 py-1.5 pr-8 text-white focus:outline-none focus:border-white transition-colors cursor-pointer text-xs uppercase tracking-wider font-label-mono"
+                >
+                  <option value="all" className="bg-black">ALL</option>
+                  <option value="easy" className="bg-black">Easy</option>
+                  <option value="easy - medium" className="bg-black">Easy - Medium</option>
+                  <option value="medium" className="bg-black">Medium</option>
+                  <option value="medium - hard" className="bg-black">Medium - Hard</option>
+                  <option value="hard" className="bg-black">Hard</option>
+                </select>
+                <span className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-white text-[10px]">↓</span>
+              </div>
+            </div>
+
+            {/* 3. Size */}
+            <div className="flex items-center gap-2">
+              <span className="text-[#666D71] whitespace-nowrap">Size :</span>
+              <div className="relative inline-block">
+                <select
+                  value={selectedSize}
+                  onChange={(e) => setSelectedSize(e.target.value)}
+                  className="appearance-none bg-black border border-[#262B2E] rounded-full px-4 py-1.5 pr-8 text-white focus:outline-none focus:border-white transition-colors cursor-pointer text-xs uppercase tracking-wider font-label-mono"
+                >
+                  <option value="all" className="bg-black">ALL</option>
+                  <option value="s" className="bg-black">S (Small)</option>
+                  <option value="m" className="bg-black">M (Medium)</option>
+                  <option value="l" className="bg-black">L (Large)</option>
+                  <option value="xl" className="bg-black">XL (Extra Large)</option>
+                  <option value="macro" className="bg-black">Macro</option>
+                </select>
+                <span className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-white text-[10px]">↓</span>
+              </div>
+            </div>
+
+            {/* Reset button if filtered */}
+            {isFiltered && (
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="text-white underline hover:text-neutral-400 uppercase cursor-pointer ml-2"
+              >
+                RESET
+              </button>
+            )}
+
+          </div>
+        </section>
+
+        {/* 4-Column Continuous Hairline Matrix */}
+        <section className="w-full bg-black border-t border-[#262B2E] mt-6">
+          {loading ? (
+            <div className="py-32 flex flex-col items-center justify-center text-center space-y-4">
+              <Loader2 size={36} className="text-white animate-spin" />
+              <p className="font-label-mono text-xs uppercase tracking-widest text-[#666D71]">
+                Loading Spec Matrix...
+              </p>
+            </div>
+          ) : filteredProducts.length > 0 ? (
+            <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+              {filteredProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          ) : (
+            <div className="py-28 px-6 text-center space-y-4 max-w-lg mx-auto">
+              <span className="font-label-mono text-xs uppercase tracking-widest text-[#666D71] block">
+                ZERO MATCHES FOUND
+              </span>
+              <h3 className="font-headline-code text-2xl font-bold text-white uppercase">
+                Tidak Ada Produk yang Sesuai Filter
+              </h3>
+              <p className="font-body-sm text-xs text-[#666D71] leading-relaxed">
+                Coba ubah kriteria filter difficulty atau size, atau tekan tombol reset untuk kembali melihat seluruh inventaris.
+              </p>
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="bg-white text-black px-6 py-2.5 rounded-full font-label-mono text-xs uppercase tracking-wider font-bold hover:bg-neutral-200 transition-colors cursor-pointer"
+              >
+                RESET FILTER
+              </button>
+            </div>
+          )}
+        </section>
+
+        {/* Technical Material Index Matrix */}
+        <section className="w-full bg-black py-16 lg:py-20 border-t border-[#262B2E] px-6 lg:px-12">
+          <div className="max-w-7xl mx-auto space-y-12">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+              <div>
+                <span className="font-label-mono text-xs text-[#666D71] uppercase tracking-widest">
+                  SPECIFICATION COMPLIANCE
+                </span>
+                <h2 className="font-headline-lg text-2xl sm:text-3xl font-bold text-white mt-1">
+                  Material Integrity &amp; Friction Grain
+                </h2>
+              </div>
+              <p className="font-body-sm text-xs text-[#666D71] max-w-md leading-relaxed">
+                Every Anemone volume is cast under controlled pressure to prevent void bubbles, and finished with precision grit dispersion according to DIN 18032 friction standards.
+              </p>
+            </div>
+
+            {/* 3 Dark Tech Spec Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-label-mono text-xs">
+              
+              {/* Tech 1 */}
+              <div className="bg-[#070707] border border-[#262B2E] p-6 sm:p-8 flex flex-col justify-between space-y-6">
+                <div>
+                  <div className="flex items-center justify-between text-[#666D71] text-[10px] pb-3 border-b border-[#262B2E] uppercase">
+                    <span>TECH.01</span>
+                    <span className="font-semibold text-white">COMPLIANT IFSC</span>
+                  </div>
+                  <h3 className="font-headline-code text-xl font-bold text-white mt-4">
+                    Dual-Tex Fiberglass
+                  </h3>
+                  <p className="font-body-sm text-xs text-[#666D71] mt-2 leading-relaxed">
+                    Ultra-light hollow construction for competition macros. Combines high-gloss low-drag zero-step coating with 280-mesh micro-quartz perimeter holds.
+                  </p>
+                </div>
+                <div className="pt-4 border-t border-[#262B2E] flex items-center justify-between text-[11px] text-[#666D71]">
+                  <span>DENSITY: 1.45 G/CM³</span>
+                  <span className="text-white font-medium">NO WALL DAMAGE</span>
+                </div>
+              </div>
+
+              {/* Tech 2 */}
+              <div className="bg-[#070707] border border-[#262B2E] p-6 sm:p-8 flex flex-col justify-between space-y-6">
+                <div>
+                  <div className="flex items-center justify-between text-[#666D71] text-[10px] pb-3 border-b border-[#262B2E] uppercase">
+                    <span>TECH.02</span>
+                    <span className="font-semibold text-white">SWISS POLYMER</span>
+                  </div>
+                  <h3 className="font-headline-code text-xl font-bold text-white mt-4">
+                    Dannomond PU Pure
+                  </h3>
+                  <p className="font-body-sm text-xs text-[#666D71] mt-2 leading-relaxed">
+                    High fracture-toughness thermoset polymer. Unmatched washer seating strength with zero flex under extreme commercial impact loads.
+                  </p>
+                </div>
+                <div className="pt-4 border-t border-[#262B2E] flex items-center justify-between text-[11px] text-[#666D71]">
+                  <span>IMPACT: &gt;32 KJ/M²</span>
+                  <span className="text-white font-medium">100% COLOR STABLE</span>
+                </div>
+              </div>
+
+              {/* Tech 3 */}
+              <div className="bg-[#070707] border border-[#262B2E] p-6 sm:p-8 flex flex-col justify-between space-y-6">
+                <div>
+                  <div className="flex items-center justify-between text-[#666D71] text-[10px] pb-3 border-b border-[#262B2E] uppercase">
+                    <span>TECH.03</span>
+                    <span className="font-semibold text-white">PATENTED INSERT</span>
+                  </div>
+                  <h3 className="font-headline-code text-xl font-bold text-white mt-4">
+                    Dual-Fixation System
+                  </h3>
+                  <p className="font-body-sm text-xs text-[#666D71] mt-2 leading-relaxed">
+                    Reinforced stainless steel bushings integrated flush with the hold base. Engineered for rapid cordless impact-wrench route-setting rotations.
+                  </p>
+                </div>
+                <div className="pt-4 border-t border-[#262B2E] flex items-center justify-between text-[11px] text-[#666D71]">
+                  <span>TORQUE MAX: 45 NM</span>
+                  <span className="text-white font-medium">EN 12572-3</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+      </div>
 
       {/* Route Setter Floating B2B Inquiry Bar & Modal */}
       <SetterManifestModal />
