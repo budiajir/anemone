@@ -176,12 +176,12 @@ export default function Shop() {
 
   return (
     <div className="bg-black text-white min-h-screen">
-      {/* Container with generous top clearance ensuring title is never cut off by fixed navbar */}
-      <div className="w-full pt-28 sm:pt-32 lg:pt-36 bg-black">
+      {/* Container with guaranteed 150px top clearance ensuring title is completely below the fixed navbar */}
+      <div className="w-full bg-black" style={{ paddingTop: '150px' }}>
         
         {/* Title Section matching screenshot layout: clean title, NO subtext */}
         <section className="w-full px-6 flex flex-col items-center justify-center text-center pb-4">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-headline-lg font-normal tracking-tight text-white capitalize leading-tight">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-headline-lg font-normal tracking-tight text-white capitalize leading-normal my-2 select-none">
             {displayTitle}
           </h1>
 
