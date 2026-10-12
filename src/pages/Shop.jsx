@@ -6,6 +6,77 @@ import SetterManifestModal from "../components/SetterManifestModal";
 import { categories } from "../data/products";
 import { getProducts } from "../services/api";
 
+/**
+ * Heuristic helper to deduce standard size (S, M, L, XL, Macro)
+ * based on product metadata, specifications, and name.
+ */
+function getProductSize(product) {
+  if (!product) return 'm';
+  const specs = product.specs || {};
+  if (specs.size) return specs.size.toLowerCase();
+  if (product.size) return product.size.toLowerCase();
+
+  const cat = (product.category || '').toLowerCase();
+  const name = (product.name || '').toLowerCase();
+  const desc = (product.shortDescription || product.description || '').toLowerCase();
+
+  if (cat === 'macros' || name.includes('macro') || name.includes('mega') || desc.includes('macro')) {
+    return 'macro';
+  }
+  if (name.includes('chips') || name.includes('baby') || name.includes('foothold') || desc.includes('micro')) {
+    return 's';
+  }
+  if (name.includes('motela') || name.includes('eclipse')) {
+    return 'l';
+  }
+  if (name.includes('argus')) {
+    return 'm';
+  }
+
+  // Parse dimensions in cm/mm
+  const dimMatch = (specs.dimensions || desc).match(/(\d+)\s*(?:cm|mm)/i);
+  if (dimMatch) {
+    const val = parseInt(dimMatch[1], 10);
+    const isMm = (specs.dimensions || desc).includes('mm');
+    const cm = isMm ? val / 10 : val;
+    if (cm >= 40) return 'macro';
+    if (cm >= 28) return 'xl';
+    if (cm >= 20) return 'l';
+    if (cm >= 12) return 'm';
+    return 's';
+  }
+
+  return 'm';
+}
+
+/**
+ * Matches product difficulty against selected filter option
+ */
+function matchesDifficulty(product, target) {
+  if (target === 'all') return true;
+  const specs = product.specs || {};
+  const diff = (specs.difficulty || '').toLowerCase();
+  const desc = (product.shortDescription || product.description || '').toLowerCase();
+  const t = target.toLowerCase();
+
+  if (t === 'easy') {
+    return diff === 'easy' || (desc.includes('easy') && !desc.includes('easy - medium') && !desc.includes('easy-medium'));
+  }
+  if (t === 'easy - medium') {
+    return diff.includes('easy - medium') || diff.includes('easy-medium') || desc.includes('easy - medium') || desc.includes('easy-medium');
+  }
+  if (t === 'medium') {
+    return diff === 'medium' || (desc.includes('medium') && !desc.includes('easy - medium') && !desc.includes('medium - hard') && !desc.includes('easy-medium') && !desc.includes('medium-hard'));
+  }
+  if (t === 'medium - hard') {
+    return diff.includes('medium - hard') || diff.includes('medium-hard') || desc.includes('medium - hard') || desc.includes('medium-hard');
+  }
+  if (t === 'hard') {
+    return diff === 'hard' || (desc.includes('hard') && !desc.includes('medium - hard') && !desc.includes('medium-hard'));
+  }
+  return diff.includes(t) || desc.includes(t);
+}
+
 export default function Shop() {
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
@@ -14,10 +85,9 @@ export default function Shop() {
   const [productsList, setProductsList] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Filter States
-  const [selectedMaterial, setSelectedMaterial] = useState("all");
-  const [selectedType, setSelectedType] = useState("all");
-  const [selectedBolt, setSelectedBolt] = useState("all");
+  // 3 Primary Filters (Series families, Difficulty, Size)
+  const [selectedDifficulty, setSelectedDifficulty] = useState("all");
+  const [selectedSize, setSelectedSize] = useState("all");
 
   // Category from URL or route
   const activeCategory = useMemo(() => {
@@ -66,139 +136,131 @@ export default function Shop() {
   const resetFilters = () => {
     searchParams.delete("category");
     setSearchParams(searchParams);
-    setSelectedMaterial("all");
-    setSelectedType("all");
-    setSelectedBolt("all");
+    setSelectedDifficulty("all");
+    setSelectedSize("all");
   };
 
   const isFiltered =
     activeCategory !== "All" ||
-    selectedMaterial !== "all" ||
-    selectedType !== "all" ||
-    selectedBolt !== "all";
+    selectedDifficulty !== "all" ||
+    selectedSize !== "all";
 
-  // Filtered Products
+  // Filtered Products by Series families, Difficulty, and Size
   const filteredProducts = useMemo(() => {
     return productsList.filter((product) => {
-      const pMat = (product.material || "").toLowerCase();
-      const pSpecs = product.specs || {};
-      const pType = (pSpecs.type || "").toLowerCase();
-      const pBolt = (pSpecs.boltType || "").toLowerCase();
+      // 1. Difficulty filter
+      if (selectedDifficulty !== 'all') {
+        if (!matchesDifficulty(product, selectedDifficulty)) {
+          return false;
+        }
+      }
 
-      if (selectedMaterial !== "all" && !pMat.includes(selectedMaterial.toLowerCase())) {
-        return false;
+      // 2. Size filter
+      if (selectedSize !== 'all') {
+        const pSize = getProductSize(product);
+        const target = selectedSize.toLowerCase();
+        if (target === 'macro') {
+          if (pSize !== 'macro' && pSize !== 'xl') return false;
+        } else if (target === 'xl') {
+          if (pSize !== 'xl' && pSize !== 'macro') return false;
+        } else {
+          if (pSize !== target) return false;
+        }
       }
-      if (selectedType !== "all" && !pType.includes(selectedType.toLowerCase())) {
-        return false;
-      }
-      if (selectedBolt !== "all" && !pBolt.includes(selectedBolt.toLowerCase())) {
-        return false;
-      }
+
       return true;
     });
-  }, [productsList, selectedMaterial, selectedType, selectedBolt]);
+  }, [productsList, selectedDifficulty, selectedSize]);
 
+  // Scroll to top immediately on mount and category change
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [activeCategory]);
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, [activeCategory, location.pathname]);
 
   return (
     <div className="bg-black text-white min-h-screen">
-      <main className="w-full pt-16 bg-black min-h-[calc(100vh-16rem)]">
+      <main className="w-full pt-20 sm:pt-24 bg-black min-h-[calc(100vh-16rem)]">
         <div className="flex flex-col w-full">
           
           {/* Minimalist Title Section (Dark Flathold Editorial Heritage) */}
-          <section className="w-full pt-14 pb-8 md:pt-18 md:pb-12 px-6 flex flex-col items-center justify-center text-center">
-            <div className="inline-flex items-center gap-2 font-label-mono text-[11px] text-[#666D71] uppercase tracking-widest mb-2.5">
+          <section className="w-full pt-8 pb-10 sm:pt-12 sm:pb-14 px-6 flex flex-col items-center justify-center text-center">
+            <div className="inline-flex items-center gap-2 font-label-mono text-[11px] text-[#666D71] uppercase tracking-widest mb-3 select-none">
               <span>SYS.24</span>
               <span>•</span>
               <span>OFFICIAL IFSC PRODUCER</span>
               <span>•</span>
               <span>BANDUNG / ZÜRICH</span>
             </div>
-            <h1 className="font-display-hero text-4xl sm:text-6xl md:text-7xl text-white tracking-tight font-bold leading-none uppercase">
+            <h1 className="font-display-hero text-4xl sm:text-6xl md:text-7xl text-white tracking-tight font-bold leading-tight uppercase py-1">
               {activeCategory === "All" ? "Macros & Series" : activeCategory}
             </h1>
-            <p className="mt-3.5 font-body-sm text-xs sm:text-sm text-[#666D71] max-w-xl text-center leading-relaxed">
+            <p className="mt-2.5 font-body-sm text-xs sm:text-sm text-[#666D71] max-w-xl text-center leading-relaxed">
               Dual-texture fiberglass volumes and high-density polyurethane geometries engineered for commercial setting dynamics and World Cup circuit compliance.
             </p>
           </section>
 
-          {/* Precision Filter Bar (1:1 Flathold Minimalist Spec Selector) */}
+          {/* Precision Filter Bar (Series families, Difficulty, Size) */}
           <section className="w-full border-t border-b border-[#262B2E] bg-black sticky top-16 z-30 transition-shadow duration-200">
             <div className="max-w-7xl mx-auto px-6 py-3 flex flex-wrap items-center justify-between gap-y-3 gap-x-6 text-white">
               
               {/* Filter Dropdowns */}
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 font-label-mono text-xs">
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2.5 font-label-mono text-xs">
                 
-                {/* Category / Series Families */}
+                {/* 1. Category / Series Families */}
                 <div className="flex items-center gap-2">
                   <span className="text-[#666D71] whitespace-nowrap">Series families :</span>
                   <div className="relative inline-block">
                     <select
                       value={activeCategory.toLowerCase()}
                       onChange={(e) => handleCategoryChange(e.target.value)}
-                      className="appearance-none bg-black border border-[#262B2E] rounded-full px-3 py-1 pr-6 text-white focus:outline-none focus:border-white transition-colors cursor-pointer text-xs uppercase tracking-wider font-label-mono"
+                      className="appearance-none bg-black border border-[#262B2E] rounded-full px-3.5 py-1.5 pr-7 text-white focus:outline-none focus:border-white transition-colors cursor-pointer text-xs uppercase tracking-wider font-label-mono"
                     >
                       <option value="all" className="bg-black">ALL</option>
                       {categories.map((c) => (
                         <option key={c} value={c.toLowerCase()} className="bg-black">{c}</option>
                       ))}
                     </select>
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-white text-[10px]">↓</span>
+                    <span className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-white text-[10px]">↓</span>
                   </div>
                 </div>
 
-                {/* Material Filter */}
+                {/* 2. Difficulty Filter */}
                 <div className="flex items-center gap-2">
-                  <span className="text-[#666D71] whitespace-nowrap">Material :</span>
+                  <span className="text-[#666D71] whitespace-nowrap">Difficulty :</span>
                   <div className="relative inline-block">
                     <select
-                      value={selectedMaterial}
-                      onChange={(e) => setSelectedMaterial(e.target.value)}
-                      className="appearance-none bg-black border border-[#262B2E] rounded-full px-3 py-1 pr-6 text-white focus:outline-none focus:border-white transition-colors cursor-pointer text-xs uppercase tracking-wider font-label-mono"
+                      value={selectedDifficulty}
+                      onChange={(e) => setSelectedDifficulty(e.target.value)}
+                      className="appearance-none bg-black border border-[#262B2E] rounded-full px-3.5 py-1.5 pr-7 text-white focus:outline-none focus:border-white transition-colors cursor-pointer text-xs uppercase tracking-wider font-label-mono"
                     >
                       <option value="all" className="bg-black">ALL</option>
-                      <option value="fiberglass" className="bg-black">Fiberglass (Macros)</option>
-                      <option value="pu" className="bg-black">PU (Polyurethane)</option>
+                      <option value="easy" className="bg-black">Easy</option>
+                      <option value="easy - medium" className="bg-black">Easy - Medium</option>
+                      <option value="medium" className="bg-black">Medium</option>
+                      <option value="medium - hard" className="bg-black">Medium - Hard</option>
+                      <option value="hard" className="bg-black">Hard</option>
                     </select>
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-white text-[10px]">↓</span>
+                    <span className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-white text-[10px]">↓</span>
                   </div>
                 </div>
 
-                {/* Hold Profile / Type Filter */}
-                <div className="flex items-center gap-2">
-                  <span className="text-[#666D71] whitespace-nowrap">Profile :</span>
-                  <div className="relative inline-block">
-                    <select
-                      value={selectedType}
-                      onChange={(e) => setSelectedType(e.target.value)}
-                      className="appearance-none bg-black border border-[#262B2E] rounded-full px-3 py-1 pr-6 text-white focus:outline-none focus:border-white transition-colors cursor-pointer text-xs uppercase tracking-wider font-label-mono"
-                    >
-                      <option value="all" className="bg-black">ALL</option>
-                      <option value="sloper" className="bg-black">Sloper &amp; Jug</option>
-                      <option value="pinch" className="bg-black">Pinch</option>
-                      <option value="crimp" className="bg-black">Crimp</option>
-                      <option value="mini jug" className="bg-black">Mini Jug</option>
-                    </select>
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-white text-[10px]">↓</span>
-                  </div>
-                </div>
-
-                {/* Bolt Insert Filter */}
+                {/* 3. Size Filter */}
                 <div className="flex items-center gap-2">
                   <span className="text-[#666D71] whitespace-nowrap">Size :</span>
                   <div className="relative inline-block">
                     <select
-                      value={selectedBolt}
-                      onChange={(e) => setSelectedBolt(e.target.value)}
-                      className="appearance-none bg-black border border-[#262B2E] rounded-full px-3 py-1 pr-6 text-white focus:outline-none focus:border-white transition-colors cursor-pointer text-xs uppercase tracking-wider font-label-mono"
+                      value={selectedSize}
+                      onChange={(e) => setSelectedSize(e.target.value)}
+                      className="appearance-none bg-black border border-[#262B2E] rounded-full px-3.5 py-1.5 pr-7 text-white focus:outline-none focus:border-white transition-colors cursor-pointer text-xs uppercase tracking-wider font-label-mono"
                     >
                       <option value="all" className="bg-black">ALL</option>
-                      <option value="screw-on" className="bg-black">Screw-on (Macro)</option>
-                      <option value="m10" className="bg-black">M10 Allen</option>
+                      <option value="s" className="bg-black">S (Small)</option>
+                      <option value="m" className="bg-black">M (Medium)</option>
+                      <option value="l" className="bg-black">L (Large)</option>
+                      <option value="xl" className="bg-black">XL (Extra Large)</option>
+                      <option value="macro" className="bg-black">Macro</option>
                     </select>
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-white text-[10px]">↓</span>
+                    <span className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-white text-[10px]">↓</span>
                   </div>
                 </div>
 
@@ -247,7 +309,7 @@ export default function Shop() {
                   Tidak Ada Produk yang Sesuai Filter
                 </h3>
                 <p className="font-body-sm text-xs text-[#666D71] leading-relaxed">
-                  Coba ubah kriteria filter material atau profil pegangan, atau tekan tombol reset untuk kembali melihat seluruh inventaris.
+                  Coba ubah kriteria filter difficulty atau size, atau tekan tombol reset untuk kembali melihat seluruh inventaris.
                 </p>
                 <button
                   type="button"

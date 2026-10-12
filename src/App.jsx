@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import { useEffect } from "react";
+import { BrowserRouter, Routes, Route, Outlet, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
@@ -25,6 +26,14 @@ import MobileStickyContactBar from "./components/MobileStickyContactBar";
 
 import ErrorBoundary from "./components/ErrorBoundary";
 
+function ScrollToTop() {
+  const { pathname, search } = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, [pathname, search]);
+  return null;
+}
+
 // Public site layout wrapper
 function ClientLayout() {
   return (
@@ -45,6 +54,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <BrowserRouter>
+        <ScrollToTop />
         <Routes>
         {/* Client Portal (with Public Navbar & Footer) */}
         <Route element={<ClientLayout />}>
