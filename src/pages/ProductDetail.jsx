@@ -205,13 +205,6 @@ export default function ProductDetail() {
     setTimeout(() => setAddedToast(false), 2400);
   };
 
-  const angleLabels = [
-    '01 / APEX PERSPECTIVE',
-    '02 / REVERSE CAVITY & WASHER',
-    '03 / 40° COMP OVERHANG',
-    '04 / SURFACE DUAL-TEX MACRO',
-  ];
-
   const seriesTag = (product.category || 'MACROS').toUpperCase();
   const weightNum = parseFloat(resolvedSpecs.weight) || 3.4;
   const totalWeightCalc = (weightNum * quantity).toFixed(2);
@@ -260,27 +253,8 @@ export default function ProductDetail() {
         
         {/* ─── LEFT COLUMN: STUDIO SPECIMEN STAGE (7 Cols) ─── */}
         <div className="lg:col-span-7 flex flex-col border-b lg:border-b-0 lg:border-r border-[#262B2E] bg-black">
-          {/* Micro Telemetry Header */}
-          <div className="border-b border-[#262B2E] px-4 lg:px-8 py-3 flex items-center justify-between font-label-mono text-[10px] uppercase tracking-widest text-[#666D71]">
-            <div className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span className="text-white font-medium">● STUDIO SPECIMEN // SWISS SCAN</span>
-            </div>
-            <div className="text-right truncate max-w-[280px] sm:max-w-none text-[#666D71]">
-              DUAL-TEXTURE: GLOSS ZERO-FRICTION + 120-GRIT MICRO-TEX
-            </div>
-          </div>
-
           {/* Interactive Studio Stage */}
           <div className="relative flex-1 min-h-[460px] lg:min-h-[580px] bg-[#050505] flex items-center justify-center p-6 lg:p-12 overflow-hidden group">
-            {/* Coordinate Crosshairs */}
-            <div className="absolute top-4 left-4 font-label-mono text-[10px] text-[#44494c] tracking-wider select-none pointer-events-none">
-              AXIS: Z+{activeImage * 35 + 210}mm // ROT: {activeImage * 45 + 32}°
-            </div>
-            <div className="absolute bottom-4 right-4 font-label-mono text-[10px] text-[#44494c] tracking-wider select-none pointer-events-none">
-              SCALE: 1:1 METRIC
-            </div>
-
             {/* Specimen Product Image */}
             <AnimatePresence mode="wait">
               <motion.img
@@ -326,41 +300,32 @@ export default function ProductDetail() {
             )}
           </div>
 
-          {/* Perspective View Angle Selector Strip */}
-          <div className="border-t border-[#262B2E] p-3 lg:p-4 bg-black flex flex-wrap items-center justify-between gap-2">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 flex-1">
-              {angleLabels.map((angle, idx) => {
-                const isActive = activeImage === (idx % images.length);
+          {/* Clean Gallery Thumbnails Strip (Only when multiple images exist) */}
+          {images.length > 1 && (
+            <div className="border-t border-[#262B2E] p-3 lg:p-4 bg-black flex items-center justify-center gap-3 overflow-x-auto">
+              {images.map((img, idx) => {
+                const isActive = activeImage === idx;
                 return (
                   <button
                     key={idx}
-                    onClick={() => setActiveImage(idx % images.length)}
-                    className={`px-3 py-2 text-left font-label-mono text-[10px] uppercase tracking-wider border transition-colors cursor-pointer ${
+                    type="button"
+                    onClick={() => setActiveImage(idx)}
+                    className={`w-16 h-16 sm:w-20 sm:h-20 rounded border transition-all cursor-pointer bg-[#050505] p-1.5 flex items-center justify-center ${
                       isActive
-                        ? 'border-white text-white bg-white/10'
-                        : 'border-[#262B2E] text-[#666D71] hover:text-white hover:border-[#444]'
+                        ? 'border-white scale-105 shadow-md'
+                        : 'border-[#262B2E] hover:border-[#666] opacity-70 hover:opacity-100'
                     }`}
                   >
-                    {angle}
+                    <img
+                      src={img}
+                      alt={`${product.name} view ${idx + 1}`}
+                      className="w-full h-full object-contain select-none"
+                    />
                   </button>
                 );
               })}
             </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setIsFullscreen(true)}
-                className="px-3 py-2 font-label-mono text-[10px] uppercase tracking-wider border border-[#262B2E] text-[#666D71] hover:text-white hover:border-[#444] cursor-pointer"
-              >
-                [ 1:1 HAND SCALE ]
-              </button>
-              <button
-                onClick={() => setIsFullscreen(true)}
-                className="px-3 py-2 font-label-mono text-[10px] uppercase tracking-wider border border-[#262B2E] text-[#666D71] hover:text-white hover:border-[#444] cursor-pointer"
-              >
-                [ 360° ISOMETRIC ]
-              </button>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* ─── RIGHT COLUMN: TECHNICAL SPECS & DIRECT B2B ACTIONS (5 Cols) ─── */}
