@@ -46,21 +46,11 @@ export default function Maintenance() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="font-headline-xl text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight uppercase leading-[1.05] mb-6"
+            className="font-headline-xl text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight uppercase leading-[1.05] mb-10 sm:mb-12"
           >
             Crafting The Next <br />
             <span className="text-neutral-400">Digital Experience.</span>
           </motion.h1>
-
-          {/* Description */}
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-base sm:text-lg text-[#9da3a7] max-w-xl leading-relaxed mb-10 font-light"
-          >
-            Website Anemone sedang dalam proses perancangan ulang (redesign UI/UX) untuk memberikan pengalaman visual dan pemesanan climbing holds yang lebih presisi.
-          </motion.p>
 
           {/* Direct Contact & Order Cards */}
           <motion.div
